@@ -113,6 +113,35 @@ para nunca travar em dev local sem uma conta na Brevo.
   migration (`emailVerified = createdAt`), então ninguém que já usava o sistema fica trancado
   pra fora.
 
+## Marca (favicon e logo para BIMI)
+
+A marca é um QR estilizado (os "olhos" de um QR code de verdade — três cantos com quadrados
+aninhados) em preto e branco, mesma paleta do resto do app.
+
+- `src/app/icon.svg`, `src/app/apple-icon.png`, `src/app/favicon.ico` — favicon do site
+  (convenção de arquivo do Next, nenhuma config extra necessária).
+- `public/bimi-logo.svg` — versão para BIMI: perfil **SVG Tiny-PS** (`version="1.2"
+  baseProfile="tiny-ps"`, `<title>`, só formas sólidas, sem gradiente/filtro/script), servida em
+  `https://qrcode.rbacuri.dpdns.org/bimi-logo.svg` assim que for deployado.
+
+Pra ativar o BIMI no Cloudflare (na zona de `rbacuri.dpdns.org`, já que é de lá que a Brevo manda
+os emails):
+
+1. Confirme que o DMARC do domínio está em `p=quarantine` ou `p=reject` (BIMI não funciona com
+   `p=none` — é o motivo mais comum do selo não aparecer mesmo com tudo certo).
+2. Crie um registro TXT em `default._bimi.rbacuri.dpdns.org` com o valor:
+   ```
+   v=BIMI1; l=https://qrcode.rbacuri.dpdns.org/bimi-logo.svg;
+   ```
+3. Opcional (necessário pro Gmail exibir o selo hoje em dia): um **VMC** (Verified Mark
+   Certificate, exige marca registrada) — sem ele o BIMI ainda funciona no Apple Mail, Yahoo e
+   outros clientes que não exigem VMC.
+
+O SVG segue as regras que consegui confirmar nas specs oficiais do BIMI Group (root com
+`xmlns`/`version`/`baseProfile`, viewBox quadrado, `<title>` não-vazio, só `<rect>` com `fill`
+sólido) — mas validadores de provedores de email variam, então vale rodar num validador BIMI
+antes de considerar fechado.
+
 ## Licença
 
 [MIT](LICENSE)
