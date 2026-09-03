@@ -4,10 +4,12 @@ async function sendEmail({
   to,
   subject,
   html,
+  text,
 }: {
   to: string;
   subject: string;
   html: string;
+  text: string;
 }): Promise<void> {
   const apiKey = process.env.BREVO_API_KEY;
   const fromEmail = process.env.EMAIL_FROM_ADDRESS;
@@ -28,6 +30,7 @@ async function sendEmail({
       to: [{ email: to }],
       subject,
       htmlContent: html,
+      textContent: text,
     }),
   });
 
@@ -71,6 +74,7 @@ export async function sendVerificationEmail(email: string, token: string): Promi
        ${button(link, "Confirmar email")}
        <p style="margin-top: 16px; font-size: 13px; color: #737373;">O link expira em 24 horas. Se não foi você quem criou essa conta, ignore este email.</p>`
     ),
+    text: `Confirme seu email\n\nFalta pouco. Acesse o link abaixo para confirmar sua conta:\n${link}\n\nO link expira em 24 horas. Se não foi você quem criou essa conta, ignore este email.\n\nqrcode-sys`,
   });
 }
 
@@ -85,5 +89,6 @@ export async function sendPasswordResetEmail(email: string, token: string): Prom
        ${button(link, "Redefinir senha")}
        <p style="margin-top: 16px; font-size: 13px; color: #737373;">O link expira em 1 hora. Se não foi você quem pediu, ignore este email — sua senha continua a mesma.</p>`
     ),
+    text: `Redefinir senha\n\nRecebemos um pedido para redefinir a senha da sua conta. Acesse o link abaixo para criar uma nova senha:\n${link}\n\nO link expira em 1 hora. Se não foi você quem pediu, ignore este email — sua senha continua a mesma.\n\nqrcode-sys`,
   });
 }
