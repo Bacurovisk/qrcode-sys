@@ -1,0 +1,55 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-qrcode}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-qrcode}
+    volumes:
+      - qrcode_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-qrcode}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-qrcode}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-qrcode}
+      NEXTAUTH_URL: ${NEXTAUTH_URL}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET}
+      SCAN_IP_SALT: ${SCAN_IP_SALT}
+      NEXT_PUBLIC_PAYPAL_DONATE_URL: ${NEXT_PUBLIC_PAYPAL_DONATE_URL}
+    networks:
+      - default
+      - npm_default
+
+  # Roda as migrations do Prisma. Não sobe com `docker compose up` normal —
+  # execute manualmente antes do primeiro start e após qualquer mudança de schema:
+  #   docker compose run --rm migrate
+  migrate:
+    build:
+      context: .
+      target: builder
+    profiles: ["tools"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-qrcode}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-qrcode}
+    command: npx prisma migrate deploy
+
+volumes:
+  qrcode_db_data:
+
+networks:
+  npm_default:
+    external: true
+    # Rede docker externa usada pelo Nginx Proxy Manager na VPS (stack `npm`,
+    # confirmada via `docker network ls` / `docker network inspect npm_default`).
