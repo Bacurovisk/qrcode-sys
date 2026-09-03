@@ -18,6 +18,10 @@ WORKDIR /app
 ARG BUILD_DATABASE_URL
 ENV DATABASE_URL=${BUILD_DATABASE_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
+# NEXT_PUBLIC_* vars are inlined into the client bundle at build time, not
+# read at runtime — must be passed as a build arg, not just a container env var.
+ARG NEXT_PUBLIC_PAYPAL_DONATE_URL
+ENV NEXT_PUBLIC_PAYPAL_DONATE_URL=${NEXT_PUBLIC_PAYPAL_DONATE_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
