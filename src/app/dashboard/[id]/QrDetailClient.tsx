@@ -85,13 +85,13 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">{qrCode.name}</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="min-w-0 truncate text-2xl font-semibold">{qrCode.name}</h1>
         <button
           type="button"
           onClick={handleDelete}
           disabled={deleting}
-          className="text-sm text-red-600 hover:underline disabled:opacity-50"
+          className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
         >
           {deleting ? "Excluindo..." : "Excluir"}
         </button>
@@ -123,7 +123,7 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
             />
           </div>
         ) : (
-          <p className="text-sm text-neutral-500">
+          <p className="text-sm text-neutral-600">
             QR estático: o conteúdo já está impresso no desenho e não pode ser alterado. Crie um
             novo QR code se precisar de outro conteúdo.
           </p>
@@ -144,25 +144,31 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
         <div className="rounded-lg border border-neutral-200 bg-white p-4">
           <h2 className="font-medium">Estatísticas</h2>
           <p className="mt-1 text-3xl font-semibold">{qrCode.totalScans}</p>
-          <p className="text-sm text-neutral-500">scans no total</p>
+          <p className="text-sm text-neutral-600">scans no total</p>
 
           {qrCode.recentScans.length > 0 && (
-            <table className="mt-4 w-full text-left text-sm">
-              <thead>
-                <tr className="text-neutral-500">
-                  <th className="pb-2 font-medium">Data</th>
-                  <th className="pb-2 font-medium">Origem</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-neutral-100">
-                {qrCode.recentScans.map((scan) => (
-                  <tr key={scan.id}>
-                    <td className="py-2">{new Date(scan.scannedAt).toLocaleString("pt-BR")}</td>
-                    <td className="py-2 text-neutral-500">{scan.referrer ?? "Direto"}</td>
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="text-neutral-600">
+                    <th className="pb-2 pr-4 font-medium">Data</th>
+                    <th className="pb-2 font-medium">Origem</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-neutral-100">
+                  {qrCode.recentScans.map((scan) => (
+                    <tr key={scan.id}>
+                      <td className="whitespace-nowrap py-2 pr-4">
+                        {new Date(scan.scannedAt).toLocaleString("pt-BR")}
+                      </td>
+                      <td className="max-w-[200px] truncate py-2 text-neutral-600">
+                        {scan.referrer ?? "Direto"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}

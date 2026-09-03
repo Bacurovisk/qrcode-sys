@@ -15,13 +15,15 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <header className="border-b border-neutral-200 bg-white">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4">
+        <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3">
           <Link href="/dashboard" className="font-semibold">
             qrcode-sys
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-2 sm:gap-4">
             <DonateButton />
-            <span className="text-sm text-neutral-500">{session.user.email}</span>
+            <span className="hidden text-sm text-neutral-600 sm:inline">
+              {session.user.email}
+            </span>
             <SignOutButton />
           </nav>
         </div>

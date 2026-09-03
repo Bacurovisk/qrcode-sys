@@ -13,11 +13,11 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Seus QR codes</h1>
         <Link
           href="/dashboard/new"
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+          className="shrink-0 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
         >
           + Novo QR code
         </Link>
@@ -37,16 +37,16 @@ export default async function DashboardPage() {
             <li key={qr.id}>
               <Link
                 href={`/dashboard/${qr.id}`}
-                className="flex items-center justify-between px-4 py-4 hover:bg-neutral-50"
+                className="flex items-center justify-between gap-3 px-4 py-4 hover:bg-neutral-50"
               >
-                <div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium">{qr.name}</p>
-                  <p className="text-sm text-neutral-500">
+                  <p className="truncate text-sm text-neutral-600">
                     {qr.type === "DYNAMIC" ? "Dinâmico" : "Estático"} · {qr.targetUrl}
                   </p>
                 </div>
                 {qr.type === "DYNAMIC" && (
-                  <span className="text-sm text-neutral-500">
+                  <span className="shrink-0 text-sm text-neutral-600">
                     {qr._count.scanEvents} scan{qr._count.scanEvents === 1 ? "" : "s"}
                   </span>
                 )}

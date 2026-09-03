@@ -81,7 +81,7 @@ export default function NewQrCodePage() {
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
           />
           {type === "DYNAMIC" && (
-            <p className="mt-1 text-sm text-neutral-500">
+            <p className="mt-1 text-sm text-neutral-600">
               O QR final vai apontar para um link curto rastreável — o destino pode ser trocado
               depois sem precisar reimprimir o QR.
             </p>

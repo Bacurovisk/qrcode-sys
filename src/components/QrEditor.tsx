@@ -90,14 +90,14 @@ export function QrEditor({
           <button
             type="button"
             onClick={() => qrRef.current?.download({ extension: "png", name: fileNamePrefix })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100"
           >
             Baixar PNG
           </button>
           <button
             type="button"
             onClick={() => qrRef.current?.download({ extension: "svg", name: fileNamePrefix })}
-            className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100"
+            className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100"
           >
             Baixar SVG
           </button>
@@ -167,7 +167,7 @@ export function QrEditor({
             <button
               type="button"
               onClick={() => onChange({ ...value, image: undefined })}
-              className="mt-2 text-sm text-neutral-500 underline"
+              className="mt-2 text-sm text-neutral-600 underline"
             >
               Remover logo
             </button>
