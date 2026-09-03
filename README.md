@@ -64,3 +64,7 @@ a nova versão do `app`.
 
 O botão de doação usa um link do PayPal configurável via `NEXT_PUBLIC_PAYPAL_DONATE_URL`
 (PayPal.me ou botão hospedado do PayPal Donate) — sem SDK, sem backend.
+
+## Licença
+
+[MIT](LICENSE)
