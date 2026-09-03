@@ -65,6 +65,25 @@ a nova versão do `app`.
 O botão de doação usa um link do PayPal configurável via `NEXT_PUBLIC_PAYPAL_DONATE_URL`
 (PayPal.me ou botão hospedado do PayPal Donate) — sem SDK, sem backend.
 
+## Verificação anti-robô (Cloudflare Turnstile)
+
+Login e cadastro exigem passar no Turnstile antes de enviar o formulário (verificado de novo no
+servidor — em `src/lib/auth.ts` para login, em `src/app/api/register/route.ts` para cadastro).
+
+Em dev local, o `.env.example` já vem com as **test keys** oficiais da Cloudflare
+(`1x00000000000000000000AA` / `1x0000000000000000000000000000000AA`), que sempre passam e
+funcionam em `localhost` — não precisa de conta na Cloudflare pra rodar `npm run dev`.
+
+Antes de ir pra produção:
+
+1. Crie um widget em <https://dash.cloudflare.com/?to=/:account/turnstile> pro domínio real
+   (`qrcode.rbacuri.dpdns.org`), modo "Managed".
+2. No `.env` de produção, troque `NEXT_PUBLIC_TURNSTILE_SITE_KEY` e `TURNSTILE_SECRET_KEY` pelas
+   chaves reais do widget.
+3. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` é inlined no bundle do cliente em build time — o
+   `docker-compose.yml` já repassa ela como build arg pro `app`, então basta rebuildar
+   (`docker compose build app`) depois de trocar o `.env`.
+
 ## Licença
 
 [MIT](LICENSE)

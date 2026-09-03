@@ -22,6 +22,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # read at runtime — must be passed as a build arg, not just a container env var.
 ARG NEXT_PUBLIC_PAYPAL_DONATE_URL
 ENV NEXT_PUBLIC_PAYPAL_DONATE_URL=${NEXT_PUBLIC_PAYPAL_DONATE_URL}
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build

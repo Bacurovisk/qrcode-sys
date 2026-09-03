@@ -2,11 +2,13 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { verifyTurnstileToken } from "@/lib/turnstile";
 
 const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8, "A senha precisa ter pelo menos 8 caracteres"),
   name: z.string().trim().min(1).max(100).optional(),
+  turnstileToken: z.string().min(1),
 });
 
 export async function POST(request: Request) {
@@ -16,6 +18,17 @@ export async function POST(request: Request) {
   if (!parsed.success) {
     return NextResponse.json(
       { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { status: 400 }
+    );
+  }
+
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const remoteIp = forwardedFor?.split(",")[0]?.trim();
+
+  const humanVerified = await verifyTurnstileToken(parsed.data.turnstileToken, remoteIp);
+  if (!humanVerified) {
+    return NextResponse.json(
+      { error: "Verificação anti-robô falhou, tente novamente" },
       { status: 400 }
     );
   }

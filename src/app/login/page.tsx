@@ -1,29 +1,45 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { Suspense, useCallback, useState, type FormEvent } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Turnstile } from "@/components/Turnstile";
+import { RegisteredNotice } from "./RegisteredNotice";
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileKey, setTurnstileKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const handleVerify = useCallback((token: string) => setTurnstileToken(token), []);
+  const handleExpire = useCallback(() => setTurnstileToken(null), []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!turnstileToken) {
+      setError("Confirme a verificação anti-robô");
+      return;
+    }
+
     setLoading(true);
 
     const result = await signIn("credentials", {
       email,
       password,
+      turnstileToken,
       redirect: false,
     });
 
     setLoading(false);
+    setTurnstileToken(null);
+    setTurnstileKey((k) => k + 1);
 
     if (result?.error) {
       setError("Email ou senha inválidos");
@@ -37,6 +53,9 @@ export default function LoginPage() {
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-16">
       <h1 className="text-2xl font-semibold">Entrar</h1>
+      <Suspense fallback={null}>
+        <RegisteredNotice />
+      </Suspense>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-neutral-700">Email</label>
@@ -58,10 +77,11 @@ export default function LoginPage() {
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
           />
         </div>
+        <Turnstile key={turnstileKey} onVerify={handleVerify} onExpire={handleExpire} />
         {error && <p className="text-sm text-red-600">{error}</p>}
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || !turnstileToken}
           className="w-full rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
         >
           {loading ? "Entrando..." : "Entrar"}
