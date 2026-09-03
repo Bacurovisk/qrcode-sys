@@ -14,6 +14,8 @@ export default function LoginPage() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileKey, setTurnstileKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resent, setResent] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleVerify = useCallback((token: string) => setTurnstileToken(token), []);
@@ -22,6 +24,8 @@ export default function LoginPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setNeedsVerification(false);
+    setResent(false);
 
     if (!turnstileToken) {
       setError("Confirme a verificação anti-robô");
@@ -41,6 +45,11 @@ export default function LoginPage() {
     setTurnstileToken(null);
     setTurnstileKey((k) => k + 1);
 
+    if (result?.error === "EMAIL_NOT_VERIFIED") {
+      setNeedsVerification(true);
+      return;
+    }
+
     if (result?.error) {
       setError("Email ou senha inválidos");
       return;
@@ -48,6 +57,15 @@ export default function LoginPage() {
 
     router.push("/dashboard");
     router.refresh();
+  }
+
+  async function handleResend() {
+    await fetch("/api/resend-verification", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    setResent(true);
   }
 
   return (
@@ -68,7 +86,12 @@ export default function LoginPage() {
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-neutral-700">Senha</label>
+          <div className="flex items-center justify-between">
+            <label className="block text-sm font-medium text-neutral-700">Senha</label>
+            <Link href="/forgot-password" className="text-sm text-neutral-600 underline">
+              Esqueceu a senha?
+            </Link>
+          </div>
           <input
             type="password"
             required
@@ -79,6 +102,22 @@ export default function LoginPage() {
         </div>
         <Turnstile key={turnstileKey} onVerify={handleVerify} onExpire={handleExpire} />
         {error && <p className="text-sm text-red-600">{error}</p>}
+        {needsVerification && (
+          <div className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
+            <p>Confirme seu email antes de entrar — veja a caixa de entrada.</p>
+            {resent ? (
+              <p className="mt-1 font-medium">Email reenviado.</p>
+            ) : (
+              <button
+                type="button"
+                onClick={handleResend}
+                className="mt-1 font-medium underline"
+              >
+                Reenviar email de verificação
+              </button>
+            )}
+          </div>
+        )}
         <button
           type="submit"
           disabled={loading || !turnstileToken}

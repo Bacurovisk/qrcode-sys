@@ -1,12 +1,10 @@
 "use client";
 
 import { useCallback, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Turnstile } from "@/components/Turnstile";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -14,6 +12,7 @@ export default function RegisterPage() {
   const [turnstileKey, setTurnstileKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState<string | null>(null);
 
   const handleVerify = useCallback((token: string) => setTurnstileToken(token), []);
   const handleExpire = useCallback(() => setTurnstileToken(null), []);
@@ -45,7 +44,25 @@ export default function RegisterPage() {
       return;
     }
 
-    router.push("/login?registered=1");
+    setRegisteredEmail(email);
+  }
+
+  if (registeredEmail) {
+    return (
+      <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-16 text-center">
+        <h1 className="text-2xl font-semibold text-neutral-900">Confira seu email</h1>
+        <p className="mt-4 text-neutral-600">
+          Enviamos um link de confirmação para <strong>{registeredEmail}</strong>. Clique nele
+          para ativar sua conta antes de entrar.
+        </p>
+        <Link
+          href="/login"
+          className="mt-6 inline-block rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
+        >
+          Ir para o login
+        </Link>
+      </main>
+    );
   }
 
   return (

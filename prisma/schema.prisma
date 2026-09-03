@@ -8,12 +8,32 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  email        String   @unique
-  passwordHash String
-  name         String?
-  createdAt    DateTime @default(now())
-  qrCodes      QrCode[]
+  id                 String              @id @default(cuid())
+  email              String              @unique
+  passwordHash       String
+  name               String?
+  emailVerified      DateTime?
+  createdAt          DateTime            @default(now())
+  qrCodes            QrCode[]
+  verificationTokens VerificationToken[]
+}
+
+enum TokenPurpose {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+}
+
+model VerificationToken {
+  id        String       @id @default(cuid())
+  token     String       @unique
+  purpose   TokenPurpose
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime     @default(now())
+
+  @@index([userId, purpose])
 }
 
 enum QrType {

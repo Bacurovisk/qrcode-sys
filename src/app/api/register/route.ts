@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { verifyTurnstileToken } from "@/lib/turnstile";
+import { createVerificationToken } from "@/lib/tokens";
+import { sendVerificationEmail } from "@/lib/email";
 
 const registerSchema = z.object({
   email: z.string().email(),
@@ -49,6 +51,13 @@ export async function POST(request: Request) {
     data: { email, passwordHash, name: parsed.data.name },
     select: { id: true, email: true, name: true },
   });
+
+  const token = await createVerificationToken(user.id, "EMAIL_VERIFICATION");
+  try {
+    await sendVerificationEmail(user.email, token);
+  } catch (error) {
+    console.error("Falha ao enviar email de verificação", error);
+  }
 
   return NextResponse.json({ user }, { status: 201 });
 }

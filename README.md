@@ -84,6 +84,35 @@ Antes de ir pra produção:
    `docker-compose.yml` já repassa ela como build arg pro `app`, então basta rebuildar
    (`docker compose build app`) depois de trocar o `.env`.
 
+## Emails transacionais (Brevo)
+
+Confirmação de conta e redefinição de senha são enviadas via [API transacional da
+Brevo](https://developers.brevo.com/reference/sendtransacemail) (`src/lib/email.ts`) — sem SMTP,
+só uma chamada HTTP com a `BREVO_API_KEY`.
+
+1. Gere a chave em <https://app.brevo.com/settings/keys/api>.
+2. Cadastre e verifique um remetente em Settings > Senders (ex.: `contato@rbacuri.dpdns.org`,
+   que já tem Email Routing configurado no Cloudflare) — a Brevo rejeita envios de um
+   `EMAIL_FROM_ADDRESS` não verificado.
+3. Preencha `BREVO_API_KEY`, `EMAIL_FROM_ADDRESS` e `EMAIL_FROM_NAME` no `.env`.
+
+Sem `BREVO_API_KEY`/`EMAIL_FROM_ADDRESS` configurados, o envio falha e o erro só é logado no
+console do servidor — cadastro e redefinição de senha continuam funcionando normalmente (o token
+fica salvo no banco), só ninguém recebe o email. Combinado com o Turnstile, isso é suficiente
+para nunca travar em dev local sem uma conta na Brevo.
+
+**Fluxos:**
+- Cadastro cria o usuário com `emailVerified = null` e manda um email com link para
+  `/verify-email?token=...` (válido 24h). Login é bloqueado até confirmar — `src/lib/auth.ts`
+  lança `EMAIL_NOT_VERIFIED`, e a tela de login mostra um botão para reenviar
+  (`/api/resend-verification`, com cooldown de 60s, sem precisar de novo Turnstile).
+- "Esqueci minha senha" (`/forgot-password`) manda um link para `/reset-password?token=...`
+  (válido 1h). Ambos os endpoints sempre respondem a mesma mensagem genérica exista ou não a
+  conta, pra não vazar quais emails têm cadastro.
+- Contas criadas **antes** dessa feature foram marcadas como verificadas retroativamente pela
+  migration (`emailVerified = createdAt`), então ninguém que já usava o sistema fica trancado
+  pra fora.
+
 ## Licença
 
 [MIT](LICENSE)
