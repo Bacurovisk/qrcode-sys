@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Seus QR codes</h1>
+        <h1 className="text-2xl font-semibold text-neutral-900">Seus QR codes</h1>
         <Link
           href="/dashboard/new"
           className="shrink-0 rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
@@ -40,7 +40,7 @@ export default async function DashboardPage() {
                 className="flex items-center justify-between gap-3 px-4 py-4 hover:bg-neutral-50"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium">{qr.name}</p>
+                  <p className="font-medium text-neutral-900">{qr.name}</p>
                   <p className="truncate text-sm text-neutral-600">
                     {qr.type === "DYNAMIC" ? "Dinâmico" : "Estático"} · {qr.targetUrl}
                   </p>

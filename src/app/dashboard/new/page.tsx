@@ -40,7 +40,7 @@ export default function NewQrCodePage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Novo QR code</h1>
+      <h1 className="text-2xl font-semibold text-neutral-900">Novo QR code</h1>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">
         <div className="grid gap-4 sm:grid-cols-2">

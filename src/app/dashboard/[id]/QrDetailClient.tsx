@@ -86,7 +86,7 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="min-w-0 truncate text-2xl font-semibold">{qrCode.name}</h1>
+        <h1 className="min-w-0 truncate text-2xl font-semibold text-neutral-900">{qrCode.name}</h1>
         <button
           type="button"
           onClick={handleDelete}
@@ -102,7 +102,7 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
       </div>
 
       <div className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4">
-        <h2 className="font-medium">Editar</h2>
+        <h2 className="font-medium text-neutral-900">Editar</h2>
         <div>
           <label className="block text-sm font-medium text-neutral-700">Nome</label>
           <input
@@ -142,8 +142,8 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
 
       {qrCode.type === "DYNAMIC" && (
         <div className="rounded-lg border border-neutral-200 bg-white p-4">
-          <h2 className="font-medium">Estatísticas</h2>
-          <p className="mt-1 text-3xl font-semibold">{qrCode.totalScans}</p>
+          <h2 className="font-medium text-neutral-900">Estatísticas</h2>
+          <p className="mt-1 text-3xl font-semibold text-neutral-900">{qrCode.totalScans}</p>
           <p className="text-sm text-neutral-600">scans no total</p>
 
           {qrCode.recentScans.length > 0 && (
@@ -158,7 +158,7 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
                 <tbody className="divide-y divide-neutral-100">
                   {qrCode.recentScans.map((scan) => (
                     <tr key={scan.id}>
-                      <td className="whitespace-nowrap py-2 pr-4">
+                      <td className="whitespace-nowrap py-2 pr-4 text-neutral-900">
                         {new Date(scan.scannedAt).toLocaleString("pt-BR")}
                       </td>
                       <td className="max-w-[200px] truncate py-2 text-neutral-600">

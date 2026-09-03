@@ -32,7 +32,7 @@ export default function RegisterPage() {
     const res = await fetch("/api/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, password, turnstileToken }),
+      body: JSON.stringify({ name: name.trim() || undefined, email, password, turnstileToken }),
     });
 
     setLoading(false);
@@ -50,7 +50,7 @@ export default function RegisterPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-16">
-      <h1 className="text-2xl font-semibold">Criar conta</h1>
+      <h1 className="text-2xl font-semibold text-neutral-900">Criar conta</h1>
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-neutral-700">Nome</label>
