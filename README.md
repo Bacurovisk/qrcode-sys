@@ -3,6 +3,8 @@
 Sistema de QR codes estáticos e dinâmicos com contas de usuário, personalização visual gratuita
 (cores, formato dos pontos, logo) e estatísticas de scan para QR dinâmicos. 100% self-hosted.
 
+Em produção em [qrcode.rbacuri.dpdns.org](https://qrcode.rbacuri.dpdns.org).
+
 ## Stack
 
 - Next.js 16 (App Router, TypeScript)
@@ -31,25 +33,34 @@ npm run dev
 
 ## Deploy na VPS
 
-Segue o mesmo padrão dos outros serviços: container próprio, sem porta pública exposta,
-atrás do Nginx Proxy Manager.
+Segue o mesmo padrão dos outros serviços (`~/docker/<nome>` na VPS): container próprio, sem
+porta pública exposta, atrás do Nginx Proxy Manager, com `container_name` fixo pro app e pro
+Postgres — sem isso o compose gera nomes com sufixo (`qrcode-sys-app-1`) que não são estáveis
+entre recriações, e tanto o NPM quanto o script de backup dependem de um hostname previsível.
 
-1. Ajuste `docker-compose.yml`: o nome da rede `npm_proxy` no bloco `networks` deve bater com a
-   rede docker externa usada pelo Nginx Proxy Manager na VPS (`docker network ls` para conferir).
-2. Copie `.env.example` para `.env` na VPS e preencha os valores de produção
-   (`NEXTAUTH_URL=https://qrcode.rbacuri.dpdns.org`, `NEXTAUTH_SECRET`, senha do Postgres, etc).
-3. Suba o banco e rode as migrations (só necessário no primeiro deploy e após mudanças de schema):
+1. Confirme o nome real da rede docker externa do Nginx Proxy Manager (`docker network ls` na
+   VPS — neste servidor é `npm_default`) e ajuste o bloco `networks` do `docker-compose.yml` se
+   for diferente.
+2. Envie o código pra `~/docker/qrcode-sys` na VPS via `rsync` (excluindo `node_modules`, `.next`,
+   `.git`) e copie o `.env` de produção separadamente (nunca versionado) para
+   `~/docker/qrcode-sys/.env` — é esse nome que o `docker compose` lê automaticamente para as
+   substituições `${...}`. **Não** nomeie esse arquivo `.env.production`: é um nome reservado do
+   Next.js (carregado automaticamente em `next build`, inclusive dentro da imagem Docker).
+3. Build e subida:
    ```bash
-   docker compose up -d db
+   docker compose build
+   docker compose up -d
+   ```
+4. Rode as migrations (só necessário no primeiro deploy e após mudanças de schema):
+   ```bash
    docker compose run --rm migrate
    ```
-4. Suba a aplicação:
-   ```bash
-   docker compose up -d --build app
-   ```
-5. No Nginx Proxy Manager, crie um Proxy Host novo apontando para o container `app` na porta
-   `3000` (rede interna), com SSL via Let's Encrypt — ex.: `qrcode.rbacuri.dpdns.org`.
-6. Inclua o volume `qrcode_db_data` (Postgres) no pipeline de backup diário já existente na VPS.
+5. Crie um registro DNS (A) do subdomínio apontando pro IP da VPS — não é wildcard, cada
+   subdomínio precisa do próprio registro. No Nginx Proxy Manager, crie o Proxy Host apontando
+   para o **nome do container** do app (não `localhost`) na porta `3000`, com SSL via Let's
+   Encrypt.
+6. O `pg_dump` lógico deste projeto já está integrado ao script de backup diário existente na
+   VPS (`~/backups/make-backup.sh`) — não precisa configurar nada a mais em deploys futuros.
 
 Sempre que o `prisma/schema.prisma` mudar, rode `docker compose run --rm migrate` antes de subir
 a nova versão do `app`.
