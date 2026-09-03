@@ -3,8 +3,6 @@
 Sistema de QR codes estáticos e dinâmicos com contas de usuário, personalização visual gratuita
 (cores, formato dos pontos, logo) e estatísticas de scan para QR dinâmicos. 100% self-hosted.
 
-Em produção em [qrcode.rbacuri.dpdns.org](https://qrcode.rbacuri.dpdns.org).
-
 ## Stack
 
 - Next.js 16 (App Router, TypeScript)
@@ -31,21 +29,21 @@ npm run dev
 - `prisma.config.ts` — config do Prisma 7 (connection string para o CLI de migrations)
 - `src/generated/prisma` — client do Prisma gerado (não versionado, gerado por `prisma generate`)
 
-## Deploy na VPS
+## Deploy (self-hosted, Docker)
 
-Segue o mesmo padrão dos outros serviços (`~/docker/<nome>` na VPS): container próprio, sem
-porta pública exposta, atrás do Nginx Proxy Manager, com `container_name` fixo pro app e pro
-Postgres — sem isso o compose gera nomes com sufixo (`qrcode-sys-app-1`) que não são estáveis
-entre recriações, e tanto o NPM quanto o script de backup dependem de um hostname previsível.
+Pensado pra rodar atrás de um reverse proxy próprio (Nginx Proxy Manager, Traefik, Caddy etc.),
+container próprio, sem porta pública exposta diretamente. Recomenda-se fixar `container_name`
+no `app` e no `db` no `docker-compose.yml` — sem isso o compose gera nomes com sufixo
+(`<projeto>-app-1`) que não são estáveis entre recriações, o que quebra referências por hostname
+(proxy, scripts de backup, etc).
 
-1. Confirme o nome real da rede docker externa do Nginx Proxy Manager (`docker network ls` na
-   VPS — neste servidor é `npm_default`) e ajuste o bloco `networks` do `docker-compose.yml` se
-   for diferente.
-2. Envie o código pra `~/docker/qrcode-sys` na VPS via `rsync` (excluindo `node_modules`, `.next`,
-   `.git`) e copie o `.env` de produção separadamente (nunca versionado) para
-   `~/docker/qrcode-sys/.env` — é esse nome que o `docker compose` lê automaticamente para as
-   substituições `${...}`. **Não** nomeie esse arquivo `.env.production`: é um nome reservado do
-   Next.js (carregado automaticamente em `next build`, inclusive dentro da imagem Docker).
+1. Ajuste o bloco `networks` do `docker-compose.yml` com o nome real da rede docker externa do
+   seu reverse proxy (`docker network ls` no host).
+2. Copie o código pro host (rsync/git, excluindo `node_modules`, `.next`, `.git`) e crie um `.env`
+   de produção (nunca versionado) ao lado do `docker-compose.yml` — é esse nome que o
+   `docker compose` lê automaticamente para as substituições `${...}`. **Não** nomeie esse
+   arquivo `.env.production`: é um nome reservado do Next.js (carregado automaticamente em
+   `next build`, inclusive dentro da imagem Docker).
 3. Build e subida:
    ```bash
    docker compose build
@@ -55,12 +53,9 @@ entre recriações, e tanto o NPM quanto o script de backup dependem de um hostn
    ```bash
    docker compose run --rm migrate
    ```
-5. Crie um registro DNS (A) do subdomínio apontando pro IP da VPS — não é wildcard, cada
-   subdomínio precisa do próprio registro. No Nginx Proxy Manager, crie o Proxy Host apontando
-   para o **nome do container** do app (não `localhost`) na porta `3000`, com SSL via Let's
-   Encrypt.
-6. O `pg_dump` lógico deste projeto já está integrado ao script de backup diário existente na
-   VPS (`~/backups/make-backup.sh`) — não precisa configurar nada a mais em deploys futuros.
+5. No reverse proxy, aponte pro **nome do container** do app (não `localhost`) na porta `3000`,
+   com SSL via Let's Encrypt.
+6. Inclua um `pg_dump` lógico do Postgres deste projeto no seu pipeline de backup.
 
 Sempre que o `prisma/schema.prisma` mudar, rode `docker compose run --rm migrate` antes de subir
 a nova versão do `app`.
