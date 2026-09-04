@@ -32,6 +32,10 @@ model Account {
   refresh_token     String? @db.Text
   access_token      String? @db.Text
   expires_at        Int?
+  // Campo extra que o Microsoft Entra ID manda no token (não faz parte do
+  // shape padrão do adapter) — sem essa coluna, prisma.account.create()
+  // rejeita o login da Microsoft com "Unknown argument `ext_expires_in`".
+  ext_expires_in    Int?
   token_type        String?
   scope             String?
   id_token          String? @db.Text
