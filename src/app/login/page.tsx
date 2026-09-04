@@ -1,6 +1,7 @@
 "use client";
 
 import { signIn } from "next-auth/react";
+import Link from "next/link";
 
 export default function LoginPage() {
   return (
@@ -28,6 +29,18 @@ export default function LoginPage() {
           Continuar com Microsoft
         </button>
       </div>
+
+      <p className="mt-6 text-center text-xs text-neutral-600">
+        Ao entrar, você concorda com os{" "}
+        <Link href="/termos-uso" className="underline">
+          Termos de Uso
+        </Link>{" "}
+        e a{" "}
+        <Link href="/politica-privacidade" className="underline">
+          Política de Privacidade
+        </Link>
+        .
+      </p>
     </main>
   );
 }
