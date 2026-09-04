@@ -72,7 +72,7 @@ O botão de doação usa um link do PayPal configurável via `NEXT_PUBLIC_PAYPAL
 
 ## Login (OAuth — Google e Microsoft)
 
-Não existe cadastro/senha própria: login é só `signIn("google")` / `signIn("azure-ad")`
+Não existe cadastro/senha própria: login é só `signIn("google")` / `signIn("microsoft-entra-id")`
 (`src/app/login/page.tsx`), com `@next-auth/prisma-adapter` (`src/lib/auth.ts`) persistindo
 usuário e conta vinculada no Postgres. Decisão tomada porque emails transacionais próprios
 (verificação de conta, reset de senha) esbarravam na reputação ruim do domínio de envio — ver
@@ -88,7 +88,10 @@ Credenciais necessárias antes do próximo deploy:
   New registration. Em "Supported account types" escolha "Accounts in any organizational
   directory and personal Microsoft accounts" (aceita outlook.com/hotmail.com além de contas
   corporativas — é por isso que `tenantId` está fixo em `"common"` no provider). Redirect URI
-  (tipo Web) em Authentication: `{NEXTAUTH_URL}/api/auth/callback/azure-ad`. O client secret fica
+  (tipo Web) em Authentication: `{NEXTAUTH_URL}/api/auth/callback/microsoft-entra-id` — o
+  provider é registrado com `id: "microsoft-entra-id"` em `src/lib/auth.ts` (o default do
+  NextAuth v4 seria `azure-ad`, mas a redirect URI cadastrada no Azure usa o nome do Auth.js v5).
+  O client secret fica
   em Certificates & secrets.
 
 Preencha `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AZURE_AD_CLIENT_ID` e

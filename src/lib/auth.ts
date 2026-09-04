@@ -16,6 +16,11 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
     AzureADProvider({
+      // Callback fixo em /api/auth/callback/microsoft-entra-id — é a redirect
+      // URI já cadastrada no app registration do Azure (nome do provider no
+      // Auth.js v5); o default do NextAuth v4 seria "azure-ad", por isso o
+      // override explícito aqui em vez de recadastrar a URI no Azure.
+      id: "microsoft-entra-id",
       clientId: process.env.AZURE_AD_CLIENT_ID!,
       clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
       // "common" accepts both personal Microsoft accounts (outlook.com,

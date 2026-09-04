@@ -21,7 +21,7 @@ export default function LoginPage() {
         </button>
         <button
           type="button"
-          onClick={() => signIn("azure-ad", { callbackUrl: "/dashboard" })}
+          onClick={() => signIn("microsoft-entra-id", { callbackUrl: "/dashboard" })}
           className="flex w-full items-center justify-center gap-3 rounded-md border border-neutral-300 px-4 py-2.5 text-sm font-medium text-neutral-900 hover:bg-neutral-100"
         >
           <MicrosoftIcon />
