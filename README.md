@@ -7,7 +7,8 @@ Sistema de QR codes estáticos e dinâmicos com contas de usuário, personaliza�
 
 - Next.js 16 (App Router, TypeScript)
 - Postgres + Prisma 7 (driver adapter `@prisma/adapter-pg`)
-- Auth.js (NextAuth v4), provider Credentials, sessão em JWT
+- Auth.js (NextAuth v4) — login só via OAuth (Google e Microsoft), `@next-auth/prisma-adapter`
+  pra persistir contas, sessão em JWT
 - `qr-code-styling` para a arte do QR (client-side, gratuita)
 
 ## Desenvolvimento local
@@ -17,13 +18,17 @@ Requer um Postgres acessível (local, ou via `docker compose up -d db` se tiver 
 ```bash
 cp .env.example .env      # preencha DATABASE_URL, NEXTAUTH_SECRET (openssl rand -base64 32), etc.
 npm install                # roda `prisma generate` automaticamente (postinstall)
-npx prisma migrate dev --name init   # cria as tabelas (primeira vez, precisa de Postgres acessível)
+npx prisma migrate deploy  # aplica as migrations existentes (precisa de Postgres acessível)
 npm run dev
 ```
 
+Pra testar o login de verdade em dev local, preencha `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`
+e/ou `AZURE_AD_CLIENT_ID`/`AZURE_AD_CLIENT_SECRET` no `.env` (veja como gerar cada um nos
+comentários do `.env.example`) — sem isso o botão de login retorna erro do provedor.
+
 ## Estrutura
 
-- `src/app` — rotas (App Router): landing page, `/login`, `/register`, `/dashboard/*`, rotas de API
+- `src/app` — rotas (App Router): landing page, `/login` (OAuth), `/dashboard/*`, rotas de API
 - `src/app/r/[slug]` — rota pública de redirect dos QR dinâmicos; grava o evento de scan antes de redirecionar
 - `prisma/schema.prisma` — modelos `User`, `QrCode`, `ScanEvent`
 - `prisma.config.ts` — config do Prisma 7 (connection string para o CLI de migrations)
@@ -65,53 +70,29 @@ a nova versão do `app`.
 O botão de doação usa um link do PayPal configurável via `NEXT_PUBLIC_PAYPAL_DONATE_URL`
 (PayPal.me ou botão hospedado do PayPal Donate) — sem SDK, sem backend.
 
-## Verificação anti-robô (Cloudflare Turnstile)
+## Login (OAuth — Google e Microsoft)
 
-Login e cadastro exigem passar no Turnstile antes de enviar o formulário (verificado de novo no
-servidor — em `src/lib/auth.ts` para login, em `src/app/api/register/route.ts` para cadastro).
+Não existe cadastro/senha própria: login é só `signIn("google")` / `signIn("azure-ad")`
+(`src/app/login/page.tsx`), com `@next-auth/prisma-adapter` (`src/lib/auth.ts`) persistindo
+usuário e conta vinculada no Postgres. Decisão tomada porque emails transacionais próprios
+(verificação de conta, reset de senha) esbarravam na reputação ruim do domínio de envio — ver
+histórico do projeto — então a saída foi eliminar por completo a necessidade de o app mandar
+email: o Google/Microsoft já garantem que o email da conta é válido.
 
-Em dev local, o `.env.example` já vem com as **test keys** oficiais da Cloudflare
-(`1x00000000000000000000AA` / `1x0000000000000000000000000000000AA`), que sempre passam e
-funcionam em `localhost` — não precisa de conta na Cloudflare pra rodar `npm run dev`.
+Credenciais necessárias antes do próximo deploy:
 
-Antes de ir pra produção:
+- **Google**: crie em <https://console.cloud.google.com/apis/credentials> → "Create Credentials"
+  → "OAuth client ID" → tipo "Web application". Redirect URI autorizado:
+  `{NEXTAUTH_URL}/api/auth/callback/google`.
+- **Microsoft**: crie em <https://portal.azure.com> → Microsoft Entra ID → App registrations →
+  New registration. Em "Supported account types" escolha "Accounts in any organizational
+  directory and personal Microsoft accounts" (aceita outlook.com/hotmail.com além de contas
+  corporativas — é por isso que `tenantId` está fixo em `"common"` no provider). Redirect URI
+  (tipo Web) em Authentication: `{NEXTAUTH_URL}/api/auth/callback/azure-ad`. O client secret fica
+  em Certificates & secrets.
 
-1. Crie um widget em <https://dash.cloudflare.com/?to=/:account/turnstile> pro domínio real
-   (`qrcode.rbacuri.dpdns.org`), modo "Managed".
-2. No `.env` de produção, troque `NEXT_PUBLIC_TURNSTILE_SITE_KEY` e `TURNSTILE_SECRET_KEY` pelas
-   chaves reais do widget.
-3. `NEXT_PUBLIC_TURNSTILE_SITE_KEY` é inlined no bundle do cliente em build time — o
-   `docker-compose.yml` já repassa ela como build arg pro `app`, então basta rebuildar
-   (`docker compose build app`) depois de trocar o `.env`.
-
-## Emails transacionais (Brevo)
-
-Confirmação de conta e redefinição de senha são enviadas via [API transacional da
-Brevo](https://developers.brevo.com/reference/sendtransacemail) (`src/lib/email.ts`) — sem SMTP,
-só uma chamada HTTP com a `BREVO_API_KEY`.
-
-1. Gere a chave em <https://app.brevo.com/settings/keys/api>.
-2. Cadastre e verifique um remetente em Settings > Senders (ex.: `contato@rbacuri.dpdns.org`,
-   que já tem Email Routing configurado no Cloudflare) — a Brevo rejeita envios de um
-   `EMAIL_FROM_ADDRESS` não verificado.
-3. Preencha `BREVO_API_KEY`, `EMAIL_FROM_ADDRESS` e `EMAIL_FROM_NAME` no `.env`.
-
-Sem `BREVO_API_KEY`/`EMAIL_FROM_ADDRESS` configurados, o envio falha e o erro só é logado no
-console do servidor — cadastro e redefinição de senha continuam funcionando normalmente (o token
-fica salvo no banco), só ninguém recebe o email. Combinado com o Turnstile, isso é suficiente
-para nunca travar em dev local sem uma conta na Brevo.
-
-**Fluxos:**
-- Cadastro cria o usuário com `emailVerified = null` e manda um email com link para
-  `/verify-email?token=...` (válido 24h). Login é bloqueado até confirmar — `src/lib/auth.ts`
-  lança `EMAIL_NOT_VERIFIED`, e a tela de login mostra um botão para reenviar
-  (`/api/resend-verification`, com cooldown de 60s, sem precisar de novo Turnstile).
-- "Esqueci minha senha" (`/forgot-password`) manda um link para `/reset-password?token=...`
-  (válido 1h). Ambos os endpoints sempre respondem a mesma mensagem genérica exista ou não a
-  conta, pra não vazar quais emails têm cadastro.
-- Contas criadas **antes** dessa feature foram marcadas como verificadas retroativamente pela
-  migration (`emailVerified = createdAt`), então ninguém que já usava o sistema fica trancado
-  pra fora.
+Preencha `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AZURE_AD_CLIENT_ID` e
+`AZURE_AD_CLIENT_SECRET` no `.env` — são server-only, não precisam de build arg no Docker.
 
 ## Marca (favicon e logo para BIMI)
 
@@ -124,8 +105,8 @@ aninhados) em preto e branco, mesma paleta do resto do app.
   baseProfile="tiny-ps"`, `<title>`, só formas sólidas, sem gradiente/filtro/script), servida em
   `https://qrcode.rbacuri.dpdns.org/bimi-logo.svg` assim que for deployado.
 
-Pra ativar o BIMI no Cloudflare (na zona de `rbacuri.dpdns.org`, já que é de lá que a Brevo manda
-os emails):
+Pra ativar o BIMI no Cloudflare (na zona de `rbacuri.dpdns.org` — independe deste app, é sobre a
+reputação/branding do domínio de email como um todo):
 
 1. Confirme que o DMARC do domínio está em `p=quarantine` ou `p=reject` (BIMI não funciona com
    `p=none` — é o motivo mais comum do selo não aparecer mesmo com tudo certo).

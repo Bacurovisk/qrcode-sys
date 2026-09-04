@@ -1,47 +1,26 @@
 import type { NextAuthOptions } from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
+import GoogleProvider from "next-auth/providers/google";
+import AzureADProvider from "next-auth/providers/azure-ad";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { verifyTurnstileToken } from "@/lib/turnstile";
 
 export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   pages: {
     signIn: "/login",
   },
   providers: [
-    CredentialsProvider({
-      name: "Credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Senha", type: "password" },
-        turnstileToken: { label: "Turnstile", type: "text" },
-      },
-      async authorize(credentials, req) {
-        if (!credentials?.email || !credentials?.password) return null;
-
-        const forwardedFor = req?.headers?.["x-forwarded-for"];
-        const remoteIp = Array.isArray(forwardedFor)
-          ? forwardedFor[0]
-          : forwardedFor?.split(",")[0]?.trim();
-
-        const humanVerified = await verifyTurnstileToken(credentials.turnstileToken, remoteIp);
-        if (!humanVerified) return null;
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
-        });
-        if (!user) return null;
-
-        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
-        if (!valid) return null;
-
-        if (!user.emailVerified) {
-          throw new Error("EMAIL_NOT_VERIFIED");
-        }
-
-        return { id: user.id, email: user.email, name: user.name ?? undefined };
-      },
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+    }),
+    AzureADProvider({
+      clientId: process.env.AZURE_AD_CLIENT_ID!,
+      clientSecret: process.env.AZURE_AD_CLIENT_SECRET!,
+      // "common" accepts both personal Microsoft accounts (outlook.com,
+      // hotmail.com) and work/school (Entra ID) accounts.
+      tenantId: "common",
     }),
   ],
   callbacks: {
