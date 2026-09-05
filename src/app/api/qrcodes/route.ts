@@ -5,11 +5,12 @@ import type { Prisma } from "@/generated/prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
+import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
+import { DYNAMIC_ONLY_KINDS } from "@/lib/qrContent";
 
-const createSchema = z.object({
+const baseSchema = z.object({
   name: z.string().trim().min(1).max(120),
   type: z.enum(["STATIC", "DYNAMIC"]),
-  targetUrl: z.string().url(),
   style: z.record(z.string(), z.unknown()).optional().default({}),
 });
 
@@ -35,15 +36,26 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => null);
-  const parsed = createSchema.safeParse(body);
-  if (!parsed.success) {
+
+  const base = baseSchema.safeParse(body);
+  if (!base.success) {
     return NextResponse.json(
-      { error: parsed.error.issues[0]?.message ?? "Dados inválidos" },
+      { error: base.error.issues[0]?.message ?? "Dados inválidos" },
       { status: 400 }
     );
   }
 
-  const { name, type, targetUrl, style } = parsed.data;
+  const kindPayload = qrPayloadSchema.safeParse(body);
+  if (!kindPayload.success) {
+    return NextResponse.json(
+      { error: kindPayload.error.issues[0]?.message ?? "Dados inválidos para este tipo de QR" },
+      { status: 400 }
+    );
+  }
+
+  const { name, style } = base.data;
+  const { kind, payload } = kindPayload.data;
+  const type = DYNAMIC_ONLY_KINDS.includes(kind) ? "DYNAMIC" : base.data.type;
 
   let slug: string | undefined;
   if (type === "DYNAMIC") {
@@ -67,7 +79,8 @@ export async function POST(request: Request) {
     data: {
       name,
       type,
-      targetUrl,
+      kind,
+      payload: payload as Prisma.InputJsonValue,
       style: style as Prisma.InputJsonValue,
       slug,
       userId: session.user.id,

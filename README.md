@@ -29,10 +29,33 @@ comentários do `.env.example`) — sem isso o botão de login retorna erro do p
 ## Estrutura
 
 - `src/app` — rotas (App Router): landing page, `/login` (OAuth), `/dashboard/*`, rotas de API
-- `src/app/r/[slug]` — rota pública de redirect dos QR dinâmicos; grava o evento de scan antes de redirecionar
-- `prisma/schema.prisma` — modelos `User`, `QrCode`, `ScanEvent`
+- `src/app/r/[slug]` — rota pública dos QR dinâmicos; grava o evento de scan e então redireciona
+  ou renderiza uma página, dependendo do tipo de conteúdo (veja abaixo)
+- `prisma/schema.prisma` — modelos `User`, `QrCode` (`kind` + `payload` Json), `ScanEvent`
 - `prisma.config.ts` — config do Prisma 7 (connection string para o CLI de migrations)
 - `src/generated/prisma` — client do Prisma gerado (não versionado, gerado por `prisma generate`)
+
+## Tipos de QR code
+
+Um `QrCode` tem um `kind` (URL, Texto, Contato, Rede social, Aplicativo, Localização, SMS,
+Email, Telefone, Wifi, Pix) e um `payload` Json com os campos específicos daquele tipo — toda a
+lógica de codificação fica centralizada em `src/lib/qrContent.ts`, usada tanto no preview do
+editor (client) quanto na rota `/r/[slug]` (server), então as duas nunca divergem.
+
+- **URL, Rede social, Telefone, Email, SMS, Localização** — sempre viram um redirect de verdade
+  (`tel:`, `mailto:`, `sms:`, um link do Google Maps para localização). QR estático grava o
+  conteúdo direto na imagem; dinâmico aponta pro `/r/[slug]`, que resolve e redireciona.
+- **Aplicativo** — só existe como dinâmico: `/r/[slug]` detecta Android/iOS pelo `User-Agent` e
+  manda pra loja certa; sem match (ou sem link daquele SO), cai no link de fallback ou numa
+  página simples com os botões preenchidos.
+- **Texto, Contato, Wifi, Pix** — não dá pra "redirecionar" pra esse conteúdo (não são uma URI
+  navegável). Estático grava o formato padrão direto na imagem (vCard, `WIFI:...`, o BR Code do
+  Pix — todos lidos nativamente por scanners de QR/apps de banco). Dinâmico renderiza uma página
+  em `/r/[slug]`: Contato serve o `.vcf` direto (dispara "adicionar contato"), Wifi mostra
+  SSID/senha com botão de copiar, Pix mostra o "Copia e Cola" com botão de copiar.
+- O Pix segue o padrão EMV "BR Code" do Banco Central (TLV + CRC-16/CCITT-FALSE) — a montagem dos
+  campos e o CRC foram validados contra uma implementação real testada em mais de 10 bancos
+  brasileiros antes de ir pro código.
 
 ## Deploy (self-hosted, Docker)
 

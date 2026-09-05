@@ -30,8 +30,9 @@ export default async function QrDetailPage({
         id: qrCode.id,
         name: qrCode.name,
         type: qrCode.type,
+        kind: qrCode.kind,
         slug: qrCode.slug,
-        targetUrl: qrCode.targetUrl,
+        payload: qrCode.payload as Record<string, unknown>,
         style: qrCode.style as Record<string, unknown>,
         totalScans: qrCode._count.scanEvents,
         recentScans: qrCode.scanEvents.map((s) => ({

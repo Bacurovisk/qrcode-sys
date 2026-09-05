@@ -2,6 +2,11 @@ import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { QR_KINDS, summarizePayload, type QrKind } from "@/lib/qrContent";
+
+function kindLabel(kind: QrKind): string {
+  return QR_KINDS.find((k) => k.value === kind)?.label ?? kind;
+}
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
@@ -42,7 +47,9 @@ export default async function DashboardPage() {
                 <div className="min-w-0 flex-1">
                   <p className="font-medium text-neutral-900">{qr.name}</p>
                   <p className="truncate text-sm text-neutral-600">
-                    {qr.type === "DYNAMIC" ? "Dinâmico" : "Estático"} · {qr.targetUrl}
+                    {qr.type === "DYNAMIC" ? "Dinâmico" : "Estático"} · {kindLabel(qr.kind)} ·{" "}
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                    {summarizePayload(qr.kind, qr.payload as any)}
                   </p>
                 </div>
                 {qr.type === "DYNAMIC" && (

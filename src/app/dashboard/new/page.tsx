@@ -1,19 +1,58 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
+import { QrPayloadFields, defaultPayloadFor } from "@/components/qr-forms/QrPayloadFields";
+import { QR_KINDS, DYNAMIC_ONLY_KINDS, getStaticContent, type QrKind } from "@/lib/qrContent";
+
+function coerceForPreview(kind: QrKind, payload: Record<string, unknown>): Record<string, unknown> {
+  if (kind === "LOCATION") {
+    return {
+      ...payload,
+      lat: Number.parseFloat(String(payload.lat)) || 0,
+      lng: Number.parseFloat(String(payload.lng)) || 0,
+    };
+  }
+  if (kind === "PIX") {
+    const amount = Number.parseFloat(String(payload.amount));
+    return { ...payload, amount: Number.isFinite(amount) && amount > 0 ? amount : undefined };
+  }
+  if (kind === "WIFI") {
+    return { ...payload, hidden: Boolean(payload.hidden) };
+  }
+  return payload;
+}
+
+function previewContent(kind: QrKind, payload: Record<string, unknown>): string {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const content = getStaticContent(kind, coerceForPreview(kind, payload) as any);
+    return content || "Preencha os campos para ver o QR";
+  } catch {
+    return "Preencha os campos para ver o QR";
+  }
+}
 
 export default function NewQrCodePage() {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [kind, setKind] = useState<QrKind>("URL");
   const [type, setType] = useState<"STATIC" | "DYNAMIC">("DYNAMIC");
-  const [targetUrl, setTargetUrl] = useState("");
+  const [payload, setPayload] = useState<Record<string, unknown>>(defaultPayloadFor("URL"));
   const [style, setStyle] = useState<QrStyle>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const previewData = targetUrl.trim() || "https://exemplo.com";
+  const isDynamicOnly = DYNAMIC_ONLY_KINDS.includes(kind);
+  const effectiveType = isDynamicOnly ? "DYNAMIC" : type;
+
+  const previewData = useMemo(() => previewContent(kind, payload), [kind, payload]);
+
+  function handleKindChange(next: QrKind) {
+    setKind(next);
+    setPayload(defaultPayloadFor(next));
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -23,7 +62,7 @@ export default function NewQrCodePage() {
     const res = await fetch("/api/qrcodes", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, type, targetUrl, style }),
+      body: JSON.stringify({ name, type: effectiveType, kind, payload, style }),
     });
 
     setLoading(false);
@@ -51,41 +90,47 @@ export default function NewQrCodePage() {
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Cardápio do restaurante"
+              placeholder="Nome do QR code"
               className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-neutral-700">Tipo</label>
+            <label className="block text-sm font-medium text-neutral-700">Tipo de conteúdo</label>
             <select
-              value={type}
-              onChange={(e) => setType(e.target.value as "STATIC" | "DYNAMIC")}
+              value={kind}
+              onChange={(e) => handleKindChange(e.target.value as QrKind)}
               className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             >
-              <option value="DYNAMIC">Dinâmico (com estatísticas de scan)</option>
-              <option value="STATIC">Estático (sem rastreamento)</option>
+              {QR_KINDS.map((k) => (
+                <option key={k.value} value={k.value}>
+                  {k.label}
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-neutral-700">
-            {type === "DYNAMIC" ? "URL de destino" : "Conteúdo (URL ou texto)"}
-          </label>
-          <input
-            type="text"
-            required
-            value={targetUrl}
-            onChange={(e) => setTargetUrl(e.target.value)}
-            placeholder="https://..."
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-          />
-          {type === "DYNAMIC" && (
+          <label className="block text-sm font-medium text-neutral-700">Estático ou dinâmico</label>
+          <select
+            value={effectiveType}
+            disabled={isDynamicOnly}
+            onChange={(e) => setType(e.target.value as "STATIC" | "DYNAMIC")}
+            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-100 disabled:text-neutral-500"
+          >
+            <option value="DYNAMIC">Dinâmico (com estatísticas de scan, editável depois)</option>
+            <option value="STATIC">Estático (sem rastreamento, conteúdo fixo)</option>
+          </select>
+          {isDynamicOnly && (
             <p className="mt-1 text-sm text-neutral-600">
-              O QR final vai apontar para um link curto rastreável — o destino pode ser trocado
-              depois sem precisar reimprimir o QR.
+              QR de aplicativo só funciona como dinâmico — é o nosso servidor que detecta Android
+              ou iPhone na hora do scan e manda pra loja certa.
             </p>
           )}
+        </div>
+
+        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+          <QrPayloadFields kind={kind} payload={payload} onChange={setPayload} />
         </div>
 
         <div>

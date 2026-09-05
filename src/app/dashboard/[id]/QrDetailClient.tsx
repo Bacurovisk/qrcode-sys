@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
+import { QrPayloadFields } from "@/components/qr-forms/QrPayloadFields";
+import { getStaticContent, QR_KINDS, type QrKind } from "@/lib/qrContent";
 
 type ScanEvent = {
   id: string;
@@ -15,17 +17,22 @@ type QrCodeDetail = {
   id: string;
   name: string;
   type: "STATIC" | "DYNAMIC";
+  kind: QrKind;
   slug: string | null;
-  targetUrl: string;
+  payload: Record<string, unknown>;
   style: Record<string, unknown>;
   totalScans: number;
   recentScans: ScanEvent[];
 };
 
+function kindLabel(kind: QrKind): string {
+  return QR_KINDS.find((k) => k.value === kind)?.label ?? kind;
+}
+
 export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
   const router = useRouter();
   const [name, setName] = useState(qrCode.name);
-  const [targetUrl, setTargetUrl] = useState(qrCode.targetUrl);
+  const [payload, setPayload] = useState<Record<string, unknown>>(qrCode.payload);
   const [style, setStyle] = useState<QrStyle>(qrCode.style as QrStyle);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -39,30 +46,35 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
       }
       return `/r/${qrCode.slug}`;
     }
-    return targetUrl;
-  }, [qrCode.type, qrCode.slug, targetUrl]);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return getStaticContent(qrCode.kind, payload as any) || "";
+    } catch {
+      return "";
+    }
+  }, [qrCode.type, qrCode.slug, qrCode.kind, payload]);
 
   async function handleSave() {
     setError(null);
     setSaved(false);
     setSaving(true);
 
-    const payload: Record<string, unknown> = { name, style };
+    const body: Record<string, unknown> = { name, style };
     if (qrCode.type === "DYNAMIC") {
-      payload.targetUrl = targetUrl;
+      body.payload = payload;
     }
 
     const res = await fetch(`/api/qrcodes/${qrCode.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(body),
     });
 
     setSaving(false);
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      setError(body.error ?? "Não foi possível salvar");
+      const resBody = await res.json().catch(() => ({}));
+      setError(resBody.error ?? "Não foi possível salvar");
       return;
     }
 
@@ -86,7 +98,10 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between gap-3">
-        <h1 className="min-w-0 truncate text-2xl font-semibold text-neutral-900">{qrCode.name}</h1>
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-semibold text-neutral-900">{qrCode.name}</h1>
+          <p className="text-sm text-neutral-600">{kindLabel(qrCode.kind)}</p>
+        </div>
         <button
           type="button"
           onClick={handleDelete}
@@ -113,15 +128,7 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
           />
         </div>
         {qrCode.type === "DYNAMIC" ? (
-          <div>
-            <label className="block text-sm font-medium text-neutral-700">URL de destino</label>
-            <input
-              type="text"
-              value={targetUrl}
-              onChange={(e) => setTargetUrl(e.target.value)}
-              className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-            />
-          </div>
+          <QrPayloadFields kind={qrCode.kind} payload={payload} onChange={setPayload} />
         ) : (
           <p className="text-sm text-neutral-600">
             QR estático: o conteúdo já está impresso no desenho e não pode ser alterado. Crie um

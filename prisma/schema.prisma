@@ -66,12 +66,27 @@ enum QrType {
   DYNAMIC
 }
 
+enum QrKind {
+  URL
+  TEXT
+  CONTACT
+  SOCIAL
+  APP
+  LOCATION
+  SMS
+  EMAIL
+  PHONE
+  WIFI
+  PIX
+}
+
 model QrCode {
   id         String      @id @default(cuid())
   slug       String?     @unique
   type       QrType
+  kind       QrKind      @default(URL)
   name       String
-  targetUrl  String
+  payload    Json
   style      Json
   createdAt  DateTime    @default(now())
   updatedAt  DateTime    @updatedAt
