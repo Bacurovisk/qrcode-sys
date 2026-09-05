@@ -24,6 +24,13 @@ ARG NEXT_PUBLIC_PAYPAL_DONATE_URL
 ENV NEXT_PUBLIC_PAYPAL_DONATE_URL=${NEXT_PUBLIC_PAYPAL_DONATE_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# `deps`'s postinstall generated the client into ./src/generated/prisma
+# *inside that stage*, which the node_modules COPY above does not carry over
+# (the custom output path lives outside node_modules) — regenerate here so
+# the client always matches the schema.prisma just copied in, instead of
+# silently reusing whatever (possibly stale) src/generated happens to be on
+# the host's build context.
+RUN npx prisma generate
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runner
