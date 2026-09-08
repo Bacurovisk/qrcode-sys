@@ -1,6 +1,13 @@
 import { createHash } from "crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { checkRateLimit } from "@/lib/rateLimit";
+import {
+  BYPASS_COOKIE_NAME,
+  bypassCookieValue,
+  isBypassCookieValid,
+  verifyTurnstileToken,
+} from "@/lib/turnstile";
 import {
   buildMailto,
   buildMapsUrl,
@@ -40,7 +47,7 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function page(title: string, bodyHtml: string): NextResponse {
+function page(title: string, bodyHtml: string, status = 200): NextResponse {
   const html = `<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -64,7 +71,37 @@ function page(title: string, bodyHtml: string): NextResponse {
 </head>
 <body><main>${bodyHtml}</main></body>
 </html>`;
-  return new NextResponse(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+  return new NextResponse(html, {
+    status,
+    headers: { "Content-Type": "text/html; charset=utf-8" },
+  });
+}
+
+const SCAN_LIMIT = 30;
+const SCAN_WINDOW_MS = 60_000;
+
+function turnstileChallengePage(slug: string, errorMsg?: string): NextResponse {
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+  if (!siteKey) {
+    // Sem Turnstile configurado neste ambiente não há como oferecer o
+    // desafio — bloqueia direto em vez de servir uma página sem saída.
+    return NextResponse.json(
+      { error: "Muitas requisições, tente novamente mais tarde" },
+      { status: 429 }
+    );
+  }
+
+  const body = `
+    <h1>Confirme que você não é um robô</h1>
+    ${errorMsg ? `<p style="color:#b91c1c">${escapeHtml(errorMsg)}</p>` : ""}
+    <p>Detectamos muitos acessos seguidos vindos do seu endereço. Resolva o desafio abaixo para continuar.</p>
+    <form method="POST" action="/r/${encodeURIComponent(slug)}">
+      <div class="cf-turnstile" data-sitekey="${escapeHtml(siteKey)}"></div>
+      <button type="submit" class="btn" style="border:none">Continuar</button>
+    </form>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>`;
+
+  return page("Verificação de segurança", body, 429);
 }
 
 function copyButtonScript(elementId: string, source: "text" | "value" = "text") {
@@ -101,6 +138,11 @@ export async function GET(
   const forwardedFor = request.headers.get("x-forwarded-for");
   const ip = forwardedFor?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip") ?? "";
   const userAgent = request.headers.get("user-agent") ?? "";
+
+  const bypassed = isBypassCookieValid(request.cookies.get(BYPASS_COOKIE_NAME)?.value, ip);
+  if (!bypassed && !checkRateLimit(`scan:${hashIp(ip)}`, { limit: SCAN_LIMIT, windowMs: SCAN_WINDOW_MS })) {
+    return turnstileChallengePage(slug);
+  }
 
   await prisma.scanEvent.create({
     data: {
@@ -209,4 +251,36 @@ export async function GET(
     default:
       return NextResponse.json({ error: "Tipo de QR não suportado" }, { status: 500 });
   }
+}
+
+// Recebe o submit do form da página de desafio (turnstileChallengePage) e,
+// se o token for válido, libera esse IP do rate limit por um tempo.
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ slug: string }> }
+) {
+  const { slug } = await params;
+
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const ip = forwardedFor?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip") ?? "";
+
+  const form = await request.formData().catch(() => null);
+  const token = form?.get("cf-turnstile-response");
+
+  const valid = typeof token === "string" && token.length > 0 && (await verifyTurnstileToken(token, ip));
+  if (!valid) {
+    return turnstileChallengePage(slug, "Não foi possível confirmar o desafio. Tente novamente.");
+  }
+
+  const response = NextResponse.redirect(new URL(`/r/${encodeURIComponent(slug)}`, request.url), {
+    status: 303,
+  });
+  response.cookies.set(BYPASS_COOKIE_NAME, bypassCookieValue(ip), {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 600,
+  });
+  return response;
 }

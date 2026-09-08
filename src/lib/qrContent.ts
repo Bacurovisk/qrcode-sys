@@ -121,10 +121,10 @@ export function buildVCard(p: ContactPayload): string {
   lines.push(`FN:${escapeVCard([p.firstName, p.lastName].filter(Boolean).join(" "))}`);
   if (p.org) lines.push(`ORG:${escapeVCard(p.org)}`);
   if (p.title) lines.push(`TITLE:${escapeVCard(p.title)}`);
-  if (p.phone) lines.push(`TEL;TYPE=WORK,VOICE:${p.phone}`);
-  if (p.cellPhone) lines.push(`TEL;TYPE=CELL:${p.cellPhone}`);
-  if (p.email) lines.push(`EMAIL:${p.email}`);
-  if (p.website) lines.push(`URL:${p.website}`);
+  if (p.phone) lines.push(`TEL;TYPE=WORK,VOICE:${escapeVCard(p.phone)}`);
+  if (p.cellPhone) lines.push(`TEL;TYPE=CELL:${escapeVCard(p.cellPhone)}`);
+  if (p.email) lines.push(`EMAIL:${escapeVCard(p.email)}`);
+  if (p.website) lines.push(`URL:${escapeVCard(p.website)}`);
   if (p.street || p.city || p.state || p.zip || p.country) {
     lines.push(
       `ADR;TYPE=WORK:;;${escapeVCard(p.street ?? "")};${escapeVCard(p.city ?? "")};${escapeVCard(

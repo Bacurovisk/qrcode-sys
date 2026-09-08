@@ -4,6 +4,7 @@ import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
 import { QrPayloadFields, defaultPayloadFor } from "@/components/qr-forms/QrPayloadFields";
+import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { QR_KINDS, DYNAMIC_ONLY_KINDS, getStaticContent, type QrKind } from "@/lib/qrContent";
 
 function coerceForPreview(kind: QrKind, payload: Record<string, unknown>): Record<string, unknown> {
@@ -43,6 +44,8 @@ export default function NewQrCodePage() {
   const [style, setStyle] = useState<QrStyle>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [requiresTurnstile, setRequiresTurnstile] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const isDynamicOnly = DYNAMIC_ONLY_KINDS.includes(kind);
   const effectiveType = isDynamicOnly ? "DYNAMIC" : type;
@@ -61,7 +64,10 @@ export default function NewQrCodePage() {
 
     const res = await fetch("/api/qrcodes", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        ...(turnstileToken ? { "X-Turnstile-Token": turnstileToken } : {}),
+      },
       body: JSON.stringify({ name, type: effectiveType, kind, payload, style }),
     });
 
@@ -69,6 +75,10 @@ export default function NewQrCodePage() {
 
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
+      if (res.status === 429 && body.requiresTurnstile) {
+        setRequiresTurnstile(true);
+        setTurnstileToken(null);
+      }
       setError(body.error ?? "Não foi possível criar o QR code");
       return;
     }
@@ -142,9 +152,11 @@ export default function NewQrCodePage() {
 
         {error && <p className="text-sm text-red-600">{error}</p>}
 
+        {requiresTurnstile && <TurnstileWidget onToken={setTurnstileToken} />}
+
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || (requiresTurnstile && !turnstileToken)}
           className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
         >
           {loading ? "Criando..." : "Criar QR code"}

@@ -7,6 +7,17 @@ import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
 import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
 import { DYNAMIC_ONLY_KINDS } from "@/lib/qrContent";
+import { checkRateLimit } from "@/lib/rateLimit";
+import {
+  BYPASS_COOKIE_NAME,
+  bypassCookieValue,
+  getCookie,
+  isBypassCookieValid,
+  verifyTurnstileToken,
+} from "@/lib/turnstile";
+
+const CREATE_LIMIT = 20;
+const CREATE_WINDOW_MS = 60_000;
 
 const baseSchema = z.object({
   name: z.string().trim().min(1).max(120),
@@ -33,6 +44,29 @@ export async function POST(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  const ip = forwardedFor?.split(",")[0]?.trim() ?? request.headers.get("x-real-ip") ?? "";
+  const bypassed = isBypassCookieValid(
+    getCookie(request.headers.get("cookie"), BYPASS_COOKIE_NAME),
+    ip
+  );
+
+  let setBypassCookie = false;
+  if (!bypassed && !checkRateLimit(`create:${session.user.id}`, { limit: CREATE_LIMIT, windowMs: CREATE_WINDOW_MS })) {
+    const token = request.headers.get("x-turnstile-token");
+    const verified = token ? await verifyTurnstileToken(token, ip) : false;
+    if (!verified) {
+      return NextResponse.json(
+        {
+          error: "Muitos QR codes criados em pouco tempo. Resolva o desafio para continuar.",
+          requiresTurnstile: true,
+        },
+        { status: 429 }
+      );
+    }
+    setBypassCookie = true;
   }
 
   const body = await request.json().catch(() => null);
@@ -87,5 +121,15 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ qrCode }, { status: 201 });
+  const response = NextResponse.json({ qrCode }, { status: 201 });
+  if (setBypassCookie) {
+    response.cookies.set(BYPASS_COOKIE_NAME, bypassCookieValue(ip), {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 600,
+    });
+  }
+  return response;
 }
