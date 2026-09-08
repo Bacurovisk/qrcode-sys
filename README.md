@@ -129,16 +129,16 @@ aninhados) em preto e branco, mesma paleta do resto do app.
   (convenção de arquivo do Next, nenhuma config extra necessária).
 - `public/bimi-logo.svg` — versão para BIMI: perfil **SVG Tiny-PS** (`version="1.2"
   baseProfile="tiny-ps"`, `<title>`, só formas sólidas, sem gradiente/filtro/script), servida em
-  `https://qrcode.rbacuri.dpdns.org/bimi-logo.svg` assim que for deployado.
+  `https://{seu-dominio}/bimi-logo.svg` assim que for deployado.
 
-Pra ativar o BIMI no Cloudflare (na zona de `rbacuri.dpdns.org` — independe deste app, é sobre a
-reputação/branding do domínio de email como um todo):
+Pra ativar o BIMI (independe deste app, é sobre a reputação/branding do domínio de email como um
+todo — os passos abaixo valem pra qualquer provedor de DNS, não só Cloudflare):
 
 1. Confirme que o DMARC do domínio está em `p=quarantine` ou `p=reject` (BIMI não funciona com
    `p=none` — é o motivo mais comum do selo não aparecer mesmo com tudo certo).
-2. Crie um registro TXT em `default._bimi.rbacuri.dpdns.org` com o valor:
+2. Crie um registro TXT em `default._bimi.{seu-dominio}` com o valor:
    ```
-   v=BIMI1; l=https://qrcode.rbacuri.dpdns.org/bimi-logo.svg;
+   v=BIMI1; l=https://{seu-dominio}/bimi-logo.svg;
    ```
 3. Opcional (necessário pro Gmail exibir o selo hoje em dia): um **VMC** (Verified Mark
    Certificate, exige marca registrada) — sem ele o BIMI ainda funciona no Apple Mail, Yahoo e
