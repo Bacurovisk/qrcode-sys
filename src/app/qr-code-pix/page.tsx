@@ -32,7 +32,11 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Consigo saber se alguém pagou?",
-    a: "O QR code Pix estático não avisa o recebedor. Confira os recebimentos no app do seu banco.",
+    a: "O QR code Pix não avisa o recebedor. Confira os recebimentos no app do seu banco.",
+  },
+  {
+    q: "Dá para ver quantas pessoas escanearam o QR code Pix?",
+    a: "Não. O QR code Pix é sempre estático: o app do banco lê o código direto na imagem, sem passar pelo qrcode-sys, então não há contagem de scans. As estatísticas existem só nos QR codes dinâmicos de outros tipos, como link e WhatsApp.",
   },
 ];
 
@@ -71,13 +75,13 @@ export default function PixQrCodePage() {
         </div>
 
         <section className="mt-12 rounded-lg border border-neutral-200 bg-white p-6">
-          <h2 className="text-xl font-semibold text-neutral-900">
-            Quer saber quantas pessoas escanearam?
-          </h2>
+          <h2 className="text-xl font-semibold text-neutral-900">Precisa de mais que Pix?</h2>
           <p className="mt-2 leading-relaxed text-neutral-700">
-            Com uma conta grátis você cria QR codes <strong>dinâmicos</strong>: o destino pode
-            ser alterado depois de impresso e você acompanha as estatísticas de scan. Além do Pix,
-            dá para gerar QR code de link, Wi-Fi, WhatsApp, contato e outros tipos.
+            Com uma conta grátis você salva seus QR codes e cria QR codes{" "}
+            <strong>dinâmicos</strong> de link, WhatsApp, redes sociais, contato e outros tipos: o
+            destino pode ser alterado depois de impresso e você acompanha as estatísticas de scan.
+            O QR code Pix continua sempre estático, porque o app do banco precisa ler o código
+            direto na imagem.
           </p>
           <Link
             href="/login"

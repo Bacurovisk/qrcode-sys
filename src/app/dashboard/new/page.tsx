@@ -5,7 +5,13 @@ import { useRouter } from "next/navigation";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
 import { QrPayloadFields, defaultPayloadFor } from "@/components/qr-forms/QrPayloadFields";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
-import { QR_KINDS, DYNAMIC_ONLY_KINDS, getStaticContent, type QrKind } from "@/lib/qrContent";
+import {
+  QR_KINDS,
+  DYNAMIC_ONLY_KINDS,
+  STATIC_ONLY_KINDS,
+  getStaticContent,
+  type QrKind,
+} from "@/lib/qrContent";
 import { normalizePixAmountInput, qrPayloadSchema } from "@/lib/qrPayloadSchema";
 
 function coerceForPreview(kind: QrKind, payload: Record<string, unknown>): Record<string, unknown> {
@@ -49,7 +55,8 @@ export default function NewQrCodePage() {
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const isDynamicOnly = DYNAMIC_ONLY_KINDS.includes(kind);
-  const effectiveType = isDynamicOnly ? "DYNAMIC" : type;
+  const isStaticOnly = STATIC_ONLY_KINDS.includes(kind);
+  const effectiveType = isDynamicOnly ? "DYNAMIC" : isStaticOnly ? "STATIC" : type;
 
   const previewData = useMemo(() => previewContent(kind, payload), [kind, payload]);
   // Mesma validação que o servidor aplica ao criar.
@@ -142,7 +149,7 @@ export default function NewQrCodePage() {
           <label className="block text-sm font-medium text-neutral-700">Estático ou dinâmico</label>
           <select
             value={effectiveType}
-            disabled={isDynamicOnly}
+            disabled={isDynamicOnly || isStaticOnly}
             onChange={(e) => setType(e.target.value as "STATIC" | "DYNAMIC")}
             className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-100 disabled:text-neutral-500"
           >
@@ -153,6 +160,13 @@ export default function NewQrCodePage() {
             <p className="mt-1 text-sm text-neutral-600">
               QR de aplicativo só funciona como dinâmico — é o nosso servidor que detecta Android
               ou iPhone na hora do scan e manda pra loja certa.
+            </p>
+          )}
+          {isStaticOnly && (
+            <p className="mt-1 text-sm text-neutral-600">
+              {kind === "PIX"
+                ? "QR de Pix só funciona como estático: o app do banco lê o código Pix gravado na imagem e não aceita um link."
+                : "QR de Wifi só funciona como estático: a câmera só oferece \"conectar à rede\" quando os dados da rede estão gravados na imagem."}
             </p>
           )}
         </div>

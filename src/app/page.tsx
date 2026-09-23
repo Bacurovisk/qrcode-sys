@@ -36,7 +36,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Qual a diferença entre QR code estático e dinâmico?",
-    a: "No estático, o conteúdo fica gravado no próprio desenho: não dá para mudar depois, mas ele funciona para sempre, independente do site. No dinâmico, o QR aponta para um link curto do qrcode-sys, então você pode trocar o destino depois de impresso e ver quantas vezes foi escaneado.",
+    a: "No estático, o conteúdo fica gravado no próprio desenho: não dá para mudar depois, mas ele funciona para sempre, independente do site. No dinâmico, o QR aponta para um link curto do qrcode-sys, então você pode trocar o destino depois de impresso e ver quantas vezes foi escaneado. Pix e Wi-Fi são sempre estáticos, porque o app do banco e a câmera precisam ler os dados direto na imagem.",
   },
   {
     q: "O QR code expira?",
@@ -85,8 +85,8 @@ export default function Home() {
             Gerador de QR Code grátis
           </h1>
           <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-neutral-600">
-            Crie QR codes estáticos e dinâmicos para link, Pix, Wi-Fi, WhatsApp e muito mais.
-            Personalize com cores, logo e moldura e acompanhe os scans em tempo real. Grátis, sem
+            Crie QR codes para link, Pix, Wi-Fi, WhatsApp e muito mais. Personalize com cores,
+            logo e moldura e, nos QR codes dinâmicos, acompanhe os scans em tempo real. Grátis, sem
             pegadinha.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
@@ -172,14 +172,17 @@ export default function Home() {
                 <h3 className="font-medium text-neutral-900">QR code estático</h3>
                 <p className="mt-2 leading-relaxed text-neutral-600">
                   O conteúdo fica gravado no desenho. Não dá para editar depois, mas funciona para
-                  sempre, mesmo se o qrcode-sys sair do ar. Ideal para Pix, Wi-Fi e contato.
+                  sempre, mesmo se o qrcode-sys sair do ar. QR codes de Pix e Wi-Fi são sempre
+                  estáticos: o app do banco e a câmera precisam ler os dados direto na imagem.
                 </p>
               </div>
               <div className="rounded-lg border border-neutral-200 p-5">
                 <h3 className="font-medium text-neutral-900">QR code dinâmico</h3>
                 <p className="mt-2 leading-relaxed text-neutral-600">
                   Aponta para um link curto: você troca o destino depois de impresso e acompanha
-                  quantas vezes foi escaneado, quando e de onde veio o acesso.
+                  quantas vezes foi escaneado, quando e de onde veio o acesso. Disponível para
+                  link, WhatsApp e redes sociais, contato, localização, SMS, email, telefone,
+                  texto e aplicativo.
                 </p>
               </div>
             </div>

@@ -111,6 +111,13 @@ export const PIX_KEY_TYPES: { value: PixKeyType; label: string }[] = [
 /** Kinds where a QR image only makes sense as a redirect-through-us dynamic link. */
 export const DYNAMIC_ONLY_KINDS: QrKind[] = ["APP"];
 
+/**
+ * Kinds whose QR image must carry the payload itself: the app that reads them
+ * (bank app for Pix, the camera's "join network" for Wi-Fi) doesn't accept a
+ * URL, so a dynamic /r/<slug> link breaks the main use.
+ */
+export const STATIC_ONLY_KINDS: QrKind[] = ["PIX", "WIFI"];
+
 function escapeVCard(value: string): string {
   return value.replace(/([\\,;])/g, "\\$1").replace(/\n/g, "\\n");
 }

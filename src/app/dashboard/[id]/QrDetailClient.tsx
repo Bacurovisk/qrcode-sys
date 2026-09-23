@@ -1,10 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
 import { QrPayloadFields } from "@/components/qr-forms/QrPayloadFields";
-import { getStaticContent, QR_KINDS, type QrKind } from "@/lib/qrContent";
+import { getStaticContent, QR_KINDS, STATIC_ONLY_KINDS, type QrKind } from "@/lib/qrContent";
 import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
 
 type ScanEvent = {
@@ -126,6 +127,25 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
           {deleting ? "Excluindo..." : "Excluir"}
         </button>
       </div>
+
+      {/* QRs criados antes de Pix/Wifi virarem só-estáticos: o link /r/ continua
+          funcionando (podem estar impressos), mas o uso principal não. */}
+      {qrCode.type === "DYNAMIC" && STATIC_ONLY_KINDS.includes(qrCode.kind) && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-medium">
+            Este QR {qrCode.kind === "PIX" ? "Pix" : "de Wifi"} é dinâmico e não funciona como deveria.
+          </p>
+          <p className="mt-1">
+            {qrCode.kind === "PIX"
+              ? "O app do banco não aceita o link que está na imagem, então quem escanear pelo banco vê \"QR inválido\". Pela câmera do celular ainda abre uma página com o Pix copia e cola."
+              : "A câmera do celular não oferece \"conectar à rede\" pelo link que está na imagem: abre uma página com a senha para copiar."}{" "}
+            Crie um QR novo, que agora sai estático, e troque o impresso quando puder.
+          </p>
+          <Link href="/dashboard/new" className="mt-2 inline-block font-medium underline">
+            Criar QR estático
+          </Link>
+        </div>
+      )}
 
       <div className="order-2 rounded-lg border border-neutral-200 bg-white p-4 md:order-1">
         <QrEditor

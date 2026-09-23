@@ -8,7 +8,7 @@ import { generateSlug } from "@/lib/slug";
 import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
 import { qrStyleSchema } from "@/lib/qrStyleSchema";
 import { MAX_QR_BODY_BYTES, readJsonBody } from "@/lib/requestBody";
-import { DYNAMIC_ONLY_KINDS } from "@/lib/qrContent";
+import { DYNAMIC_ONLY_KINDS, STATIC_ONLY_KINDS } from "@/lib/qrContent";
 import { checkRateLimit } from "@/lib/rateLimit";
 import {
   BYPASS_COOKIE_NAME,
@@ -97,7 +97,11 @@ export async function POST(request: Request) {
 
   const { name, style } = base.data;
   const { kind, payload } = kindPayload.data;
-  const type = DYNAMIC_ONLY_KINDS.includes(kind) ? "DYNAMIC" : base.data.type;
+  const type = DYNAMIC_ONLY_KINDS.includes(kind)
+    ? "DYNAMIC"
+    : STATIC_ONLY_KINDS.includes(kind)
+      ? "STATIC"
+      : base.data.type;
 
   let slug: string | undefined;
   if (type === "DYNAMIC") {

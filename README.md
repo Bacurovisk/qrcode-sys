@@ -51,8 +51,12 @@ editor (client) quanto na rota `/r/[slug]` (server), então as duas nunca diverg
 - **Texto, Contato, Wifi, Pix** — não dá pra "redirecionar" pra esse conteúdo (não são uma URI
   navegável). Estático grava o formato padrão direto na imagem (vCard, `WIFI:...`, o BR Code do
   Pix — todos lidos nativamente por scanners de QR/apps de banco). Dinâmico renderiza uma página
-  em `/r/[slug]`: Contato serve o `.vcf` direto (dispara "adicionar contato"), Wifi mostra
-  SSID/senha com botão de copiar, Pix mostra o "Copia e Cola" com botão de copiar.
+  em `/r/[slug]`: Texto mostra o texto, Contato serve o `.vcf` direto (dispara "adicionar
+  contato").
+- **Pix e Wifi só existem como estáticos** (`STATIC_ONLY_KINDS`): o app do banco e o "conectar à
+  rede" da câmera só leem os dados gravados na imagem, não um link. QRs Pix/Wifi dinâmicos criados
+  antes dessa regra continuam funcionando em `/r/[slug]` (Wifi mostra SSID/senha para copiar, Pix
+  mostra o copia e cola) e exibem um aviso na tela de edição.
 - O Pix segue o padrão EMV "BR Code" do Banco Central (TLV + CRC-16/CCITT-FALSE) — a montagem dos
   campos e o CRC foram validados contra uma implementação real testada em mais de 10 bancos
   brasileiros antes de ir pro código.
