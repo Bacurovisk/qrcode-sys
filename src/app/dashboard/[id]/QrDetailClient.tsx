@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
+import { LocalDateTime } from "@/components/LocalDateTime";
 import { QrPayloadFields } from "@/components/qr-forms/QrPayloadFields";
 import { getStaticContent, QR_KINDS, STATIC_ONLY_KINDS, type QrKind } from "@/lib/qrContent";
 import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
@@ -211,7 +212,7 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
                   {qrCode.recentScans.map((scan) => (
                     <tr key={scan.id}>
                       <td className="whitespace-nowrap py-2 pr-4 text-neutral-900">
-                        {new Date(scan.scannedAt).toLocaleString("pt-BR")}
+                        <LocalDateTime value={scan.scannedAt} />
                       </td>
                       <td className="max-w-[200px] truncate py-2 text-neutral-600">
                         {scan.referrer ?? "Direto"}
