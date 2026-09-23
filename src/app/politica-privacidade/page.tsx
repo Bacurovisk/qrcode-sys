@@ -1,13 +1,16 @@
-import type { Metadata } from "next";
 import { LegalPageLayout, LegalH2, LegalP, LegalUl } from "@/components/legal/LegalPageLayout";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Política de Privacidade — qrcode-sys",
-};
+export const metadata = pageMetadata({
+  title: "Política de Privacidade",
+  description:
+    "Quais dados o qrcode-sys coleta, para que usa e quais são seus direitos. Sem publicidade, sem venda de dados e sem cookies de rastreamento.",
+  path: "/politica-privacidade",
+});
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalPageLayout title="Política de Privacidade" lastUpdated="23 de setembro de 2026">
+    <LegalPageLayout title="Política de Privacidade" lastUpdated="24 de setembro de 2026">
       <LegalP>
         O qrcode-sys é um serviço gratuito para criar e gerenciar QR codes estáticos e dinâmicos.
         Esta página explica quais dados coletamos, para que usamos e quais direitos você tem
@@ -31,7 +34,16 @@ export default function PrivacyPolicyPage() {
         (se houver) e um hash do endereço IP de quem escaneou — nunca guardamos o IP em texto
         puro, só uma versão embaralhada usada apenas para estatísticas agregadas. QR codes
         estáticos não passam por nenhum servidor nosso ao serem escaneados, então não geram
-        nenhum dado de uso.
+        nenhum dado de uso. Acessos de robôs (buscadores, prévias de link de apps de mensagem)
+        não são registrados.
+      </LegalP>
+      <LegalP>
+        <strong>Gerador de QR code Pix sem cadastro:</strong> a página{" "}
+        <a href="/qr-code-pix" className="underline">
+          /qr-code-pix
+        </a>{" "}
+        monta o QR code inteiramente no seu navegador. A chave Pix, o nome e os demais dados
+        digitados ali não são enviados nem armazenados pelo qrcode-sys.
       </LegalP>
 
       <LegalH2>2. Como usamos os dados</LegalH2>

@@ -111,6 +111,21 @@ duas opções — sem SDK, sem backend de pagamento:
 - **PayPal**: link configurável via `NEXT_PUBLIC_PAYPAL_DONATE_URL` (PayPal.me ou botão
   hospedado do PayPal Donate).
 
+## SEO
+
+- URL canônica em `NEXT_PUBLIC_SITE_URL` (padrão `https://qrcode.neojr.com`), lida no **build**
+  (build arg no `docker-compose.yml`): home, `/qr-code-pix`, `robots.txt`, `sitemap.xml` e a
+  imagem de compartilhamento são geradas estaticamente.
+- Título, descrição, canonical e Open Graph de cada página pública vêm de `pageMetadata()`
+  (`src/lib/site.ts`); a imagem de compartilhamento é `src/app/opengraph-image.tsx`.
+- `robots.txt` (`src/app/robots.ts`) bloqueia `/r/`, `/api/` e `/dashboard`. `/login` fica
+  liberado de propósito, com `noindex` na própria página (o robô só lê o noindex se puder entrar).
+- Scans de robôs (buscadores, prévia de link do WhatsApp/Telegram etc.) e requisições `HEAD` não
+  são contados nas estatísticas (`src/lib/bot.ts`).
+- Depois do deploy: cadastrar o domínio no Google Search Console (propriedade de domínio, TXT no
+  DNS do Cloudflare), enviar `https://qrcode.neojr.com/sitemap.xml` e conferir se o `robots.txt`
+  gerenciado do Cloudflare manteve as regras e a linha `Sitemap:` do app.
+
 ## Login (OAuth — Google e Microsoft)
 
 Não existe cadastro/senha própria: login é só `signIn("google")` / `signIn("microsoft-entra-id")`

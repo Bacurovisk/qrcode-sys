@@ -1,9 +1,12 @@
-import type { Metadata } from "next";
 import { LegalPageLayout, LegalH2, LegalP, LegalUl } from "@/components/legal/LegalPageLayout";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Termos de Uso — qrcode-sys",
-};
+export const metadata = pageMetadata({
+  title: "Termos de Uso",
+  description:
+    "Regras de uso do qrcode-sys: o que é permitido criar, responsabilidades, disponibilidade do serviço e funcionamento dos QR codes estáticos e dinâmicos.",
+  path: "/termos-uso",
+});
 
 export default function TermsOfUsePage() {
   return (

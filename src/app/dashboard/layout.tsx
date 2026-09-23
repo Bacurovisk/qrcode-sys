@@ -1,10 +1,17 @@
 import { getServerSession } from "next-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { authOptions } from "@/lib/auth";
 import { SignOutButton } from "@/components/SignOutButton";
 import { DonateButton } from "@/components/DonateButton";
+
+// Área logada: fora do índice (o robots.txt também bloqueia /dashboard).
+export const metadata: Metadata = {
+  title: "Meus QR codes",
+  robots: { index: false, follow: false },
+};
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
   const session = await getServerSession(authOptions);

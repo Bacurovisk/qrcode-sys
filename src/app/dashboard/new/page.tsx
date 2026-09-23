@@ -6,7 +6,7 @@ import { QrEditor, type QrStyle } from "@/components/QrEditor";
 import { QrPayloadFields, defaultPayloadFor } from "@/components/qr-forms/QrPayloadFields";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { QR_KINDS, DYNAMIC_ONLY_KINDS, getStaticContent, type QrKind } from "@/lib/qrContent";
-import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
+import { normalizePixAmountInput, qrPayloadSchema } from "@/lib/qrPayloadSchema";
 
 function coerceForPreview(kind: QrKind, payload: Record<string, unknown>): Record<string, unknown> {
   if (kind === "LOCATION") {
@@ -17,7 +17,7 @@ function coerceForPreview(kind: QrKind, payload: Record<string, unknown>): Recor
     };
   }
   if (kind === "PIX") {
-    const amount = Number.parseFloat(String(payload.amount));
+    const amount = Number(normalizePixAmountInput(payload.amount));
     return { ...payload, amount: Number.isFinite(amount) && amount > 0 ? amount : undefined };
   }
   if (kind === "WIFI") {

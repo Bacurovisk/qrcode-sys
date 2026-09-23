@@ -1,14 +1,17 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { connection } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { PixDonation } from "@/components/PixDonation";
 import { PIX_KEY_TYPES, type PixKeyType, type PixPayload } from "@/lib/qrContent";
+import { pageMetadata } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "Apoie o projeto — qrcode-sys",
-};
+export const metadata = pageMetadata({
+  title: "Apoie o projeto",
+  description:
+    "Apoie o qrcode-sys com uma doação via Pix ou PayPal. O gerador de QR code é gratuito e mantido de forma independente.",
+  path: "/doar",
+});
 
 const PAYPAL_DONATE_URL =
   process.env.NEXT_PUBLIC_PAYPAL_DONATE_URL ?? "https://www.paypal.com/donate";

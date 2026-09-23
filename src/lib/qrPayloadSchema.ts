@@ -110,6 +110,24 @@ export const wifiPayloadSchema = z.object({
   }),
 });
 
+/**
+ * Valor digitado no campo do Pix → número (ou undefined). Campo vazio = valor
+ * livre; aceita vírgula decimal ("10,50", "1.234,56") além de ponto ("10.50").
+ * Sem vírgula, ponto seguido de grupos de exatamente 3 dígitos é milhar, no
+ * costume brasileiro: "1.234" = 1234 (não R$ 1,23), "1.234.567" = 1234567.
+ */
+export function normalizePixAmountInput(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  const trimmed = value.trim();
+  if (!trimmed) return undefined;
+  if (trimmed.includes(",")) return trimmed.replace(/\./g, "").replace(",", ".");
+  if (/^\d{1,3}(\.\d{3})+$/.test(trimmed)) return trimmed.replace(/\./g, "");
+  return trimmed;
+}
+
+/** O campo 54 (valor) do BR Code tem no máximo 13 caracteres: "9999999999.99". */
+export const PIX_MAX_AMOUNT = 9_999_999_999.99;
+
 export const pixPayloadSchema = z.object({
   kind: z.literal("PIX"),
   payload: z.object({
@@ -117,7 +135,15 @@ export const pixPayloadSchema = z.object({
     key: z.string().trim().min(1).max(140),
     name: z.string().trim().min(1).max(80),
     city: z.string().trim().min(1).max(80),
-    amount: z.coerce.number().positive().optional(),
+    amount: z.preprocess(
+      normalizePixAmountInput,
+      z.coerce
+        .number({ error: "Valor inválido: use só números, como 10,50" })
+        // Não só positive(): "0,001" passaria e viraria "0.00" no BR Code, que os bancos recusam.
+        .min(0.01, "O valor mínimo é R$ 0,01")
+        .max(PIX_MAX_AMOUNT, "O valor máximo de um Pix é R$ 9.999.999.999,99")
+        .optional()
+    ),
     description: optionalText(60),
   }),
 });

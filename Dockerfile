@@ -24,6 +24,10 @@ ARG NEXT_PUBLIC_PAYPAL_DONATE_URL
 ENV NEXT_PUBLIC_PAYPAL_DONATE_URL=${NEXT_PUBLIC_PAYPAL_DONATE_URL}
 ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+# URL canônica do site: usada no build por páginas estáticas (home, robots.txt,
+# sitemap.xml, imagem de compartilhamento). Vazia = https://qrcode.neojr.com.
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # `deps`'s postinstall generated the client into ./src/generated/prisma

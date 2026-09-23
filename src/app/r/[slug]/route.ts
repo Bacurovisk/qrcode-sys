@@ -1,6 +1,7 @@
 import { createHash } from "crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { isBotUserAgent } from "@/lib/bot";
 import { checkRateLimit } from "@/lib/rateLimit";
 import {
   BYPASS_COOKIE_NAME,
@@ -144,14 +145,19 @@ export async function GET(
     return turnstileChallengePage(slug);
   }
 
-  await prisma.scanEvent.create({
-    data: {
-      qrCodeId: qrCode.id,
-      userAgent: userAgent || undefined,
-      referrer: request.headers.get("referer") ?? undefined,
-      ipHash: ip ? hashIp(ip) : undefined,
-    },
-  });
+  // Robôs (buscadores, prévia de link do WhatsApp etc.) e HEAD de verificadores
+  // de link seguem o redirecionamento normalmente, mas não contam como scan.
+  // O Next responde HEAD com este mesmo handler, por isso o teste do método.
+  if (request.method === "GET" && !isBotUserAgent(userAgent)) {
+    await prisma.scanEvent.create({
+      data: {
+        qrCodeId: qrCode.id,
+        userAgent: userAgent || undefined,
+        referrer: request.headers.get("referer") ?? undefined,
+        ipHash: ip ? hashIp(ip) : undefined,
+      },
+    });
+  }
 
   const kind = qrCode.kind as QrKind;
   const payload = qrCode.payload as Record<string, unknown>;
