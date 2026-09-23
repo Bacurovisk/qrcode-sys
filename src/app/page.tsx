@@ -17,7 +17,12 @@ const QR_TYPES: { name: string; text: string; href?: string }[] = [
     href: "/qr-code-pix",
   },
   { name: "Wi-Fi", text: "Conecte visitantes à rede sem precisar digitar a senha." },
-  { name: "WhatsApp e redes sociais", text: "Abra uma conversa, um perfil do Instagram, TikTok, YouTube e outros." },
+  {
+    name: "WhatsApp",
+    text: "Abra uma conversa com o seu número, sem a pessoa precisar salvar o contato.",
+    href: "/qr-code-whatsapp",
+  },
+  { name: "Redes sociais", text: "Leve para o seu perfil do Instagram, TikTok, YouTube, LinkedIn e outros." },
   { name: "Contato (vCard)", text: "Salve nome, telefone, email e endereço direto na agenda." },
   { name: "Localização", text: "Abra um local, pela latitude e longitude, no app de mapas." },
   { name: "Aplicativo", text: "Mande para a App Store ou a Play Store conforme o celular." },
@@ -32,7 +37,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: "Preciso criar conta?",
-    a: "Para o gerador de QR code Pix, não. Para salvar QR codes, criar QR codes dinâmicos e ver estatísticas, você entra com sua conta Google ou Microsoft, sem cadastro de senha.",
+    a: "Para os geradores de QR code Pix e WhatsApp, não. Para salvar QR codes, criar QR codes dinâmicos e ver estatísticas, você entra com sua conta Google ou Microsoft, sem cadastro de senha.",
   },
   {
     q: "Qual a diferença entre QR code estático e dinâmico?",
@@ -71,6 +76,7 @@ export default function Home() {
           featureList: [
             "QR code estático e dinâmico",
             "QR code Pix com ou sem valor",
+            "QR code de WhatsApp",
             "Logo, cores, formatos e moldura personalizados",
             "Download em PNG e SVG",
             "Estatísticas de scan",
@@ -100,7 +106,13 @@ export default function Home() {
               href="/qr-code-pix"
               className="rounded-md border border-neutral-300 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 hover:bg-neutral-100"
             >
-              Gerar QR code Pix sem cadastro
+              QR code Pix sem cadastro
+            </Link>
+            <Link
+              href="/qr-code-whatsapp"
+              className="rounded-md border border-neutral-300 bg-white px-5 py-2.5 text-sm font-medium text-neutral-900 hover:bg-neutral-100"
+            >
+              QR code WhatsApp sem cadastro
             </Link>
           </div>
         </section>
@@ -181,7 +193,7 @@ export default function Home() {
                 <p className="mt-2 leading-relaxed text-neutral-600">
                   Aponta para um link curto: você troca o destino depois de impresso e acompanha
                   quantas vezes foi escaneado, quando e de onde veio o acesso. Disponível para
-                  link, WhatsApp e redes sociais, contato, localização, SMS, email, telefone,
+                  link, WhatsApp, redes sociais, contato, localização, SMS, email, telefone,
                   texto e aplicativo.
                 </p>
               </div>

@@ -71,6 +71,7 @@ enum QrKind {
   TEXT
   CONTACT
   SOCIAL
+  WHATSAPP
   APP
   LOCATION
   SMS

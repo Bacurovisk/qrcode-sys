@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { isBotUserAgent } from "@/lib/bot";
+import { buildWhatsappLink } from "@/lib/whatsapp";
 import { checkRateLimit } from "@/lib/rateLimit";
 import {
   BYPASS_COOKIE_NAME,
@@ -27,6 +28,7 @@ import {
   type SocialPayload,
   type TextPayload,
   type UrlPayload,
+  type WhatsappPayload,
   type WifiPayload,
 } from "@/lib/qrContent";
 
@@ -167,6 +169,12 @@ export async function GET(
     case "SOCIAL": {
       const url = (payload as UrlPayload | SocialPayload).url;
       return NextResponse.redirect(url, { status: 302 });
+    }
+
+    case "WHATSAPP": {
+      const link = buildWhatsappLink(payload as WhatsappPayload);
+      if (!link) return NextResponse.json({ error: "Número de WhatsApp inválido" }, { status: 500 });
+      return NextResponse.redirect(link, { status: 302 });
     }
 
     case "PHONE":

@@ -13,7 +13,12 @@ export function PublicHeader() {
         </Link>
         <nav className="flex items-center gap-4 text-sm">
           <Link href="/qr-code-pix" className="text-neutral-600 hover:text-neutral-900">
-            QR code Pix
+            <span className="sm:hidden">Pix</span>
+            <span className="hidden sm:inline">QR code Pix</span>
+          </Link>
+          <Link href="/qr-code-whatsapp" className="text-neutral-600 hover:text-neutral-900">
+            <span className="sm:hidden">WhatsApp</span>
+            <span className="hidden sm:inline">QR code WhatsApp</span>
           </Link>
           <Link
             href="/login"
@@ -37,6 +42,9 @@ export function PublicFooter() {
           </Link>
           <Link href="/qr-code-pix" className="hover:text-neutral-900 hover:underline">
             QR code Pix
+          </Link>
+          <Link href="/qr-code-whatsapp" className="hover:text-neutral-900 hover:underline">
+            QR code WhatsApp
           </Link>
           <Link href="/politica-privacidade" className="hover:text-neutral-900 hover:underline">
             Política de Privacidade

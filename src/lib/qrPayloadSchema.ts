@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { normalizeWhatsappNumber, WHATSAPP_COUNTRY_CODES, WHATSAPP_MESSAGE_MAX } from "@/lib/whatsapp";
 
 const optionalText = (max: number) => z.string().trim().max(max).optional().or(z.literal("")).transform((v) => v || undefined);
 
@@ -54,6 +55,29 @@ export const socialPayloadSchema = z.object({
     platform: z.enum(["instagram", "facebook", "whatsapp", "x", "linkedin", "tiktok", "youtube"]),
     url: httpUrl,
   }),
+});
+
+export const whatsappPayloadSchema = z.object({
+  kind: z.literal("WHATSAPP"),
+  payload: z
+    .object({
+      country: z.enum(WHATSAPP_COUNTRY_CODES, "Escolha o país"),
+      phone: z.string().trim().min(1, "Informe o número do WhatsApp").max(30),
+      message: optionalText(WHATSAPP_MESSAGE_MAX),
+    })
+    // Guarda o número já normalizado (só a parte nacional, só dígitos).
+    .transform((p, ctx) => {
+      const phone = normalizeWhatsappNumber(p.country, p.phone);
+      if (!phone) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["phone"],
+          message: "Número inválido: confira o código de área (DDD) e o número",
+        });
+        return z.NEVER;
+      }
+      return { country: p.country, phone, message: p.message };
+    }),
 });
 
 export const appPayloadSchema = z.object({
@@ -153,6 +177,7 @@ export const qrPayloadSchema = z.discriminatedUnion("kind", [
   textPayloadSchema,
   contactPayloadSchema,
   socialPayloadSchema,
+  whatsappPayloadSchema,
   appPayloadSchema,
   locationPayloadSchema,
   smsPayloadSchema,

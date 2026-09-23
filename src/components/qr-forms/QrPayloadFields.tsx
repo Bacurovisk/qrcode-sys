@@ -6,6 +6,12 @@ import {
   type QrKind,
   type QrPayloadMap,
 } from "@/lib/qrContent";
+import {
+  buildWhatsappLink,
+  findWhatsappCountry,
+  WHATSAPP_COUNTRIES,
+  WHATSAPP_MESSAGE_MAX,
+} from "@/lib/whatsapp";
 
 const inputClass = "mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm";
 const labelClass = "block text-sm font-medium text-neutral-700";
@@ -20,6 +26,8 @@ export function defaultPayloadFor(kind: QrKind): Record<string, unknown> {
       return { firstName: "" };
     case "SOCIAL":
       return { platform: "instagram", url: "" };
+    case "WHATSAPP":
+      return { country: "BR", phone: "", message: "" };
     case "APP":
       return { androidUrl: "", iosUrl: "", fallbackUrl: "" };
     case "LOCATION":
@@ -194,7 +202,7 @@ export function QrPayloadFields({
               onChange={(e) => set("platform", e.target.value)}
               className={inputClass}
             >
-              {SOCIAL_PLATFORMS.map((p) => (
+              {SOCIAL_PLATFORMS.filter((p) => !p.legacy || p.value === str("platform")).map((p) => (
                 <option key={p.value} value={p.value}>
                   {p.label}
                 </option>
@@ -213,6 +221,73 @@ export function QrPayloadFields({
           </Field>
         </div>
       );
+
+    case "WHATSAPP": {
+      const country = findWhatsappCountry(str("country")) ?? WHATSAPP_COUNTRIES[0];
+      const phone = str("phone");
+      const message = str("message");
+      const link = phone.trim() ? buildWhatsappLink({ country: country.code, phone, message }) : null;
+      return (
+        <div className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-[minmax(0,14rem)_1fr]">
+            <Field label="País">
+              <select
+                value={country.code}
+                onChange={(e) => set("country", e.target.value)}
+                className={inputClass}
+              >
+                {WHATSAPP_COUNTRIES.map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.flag} {c.name} (+{c.dial})
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label={country.code === "BR" ? "Número com DDD" : "Número com código de área"}>
+              <input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel-national"
+                required
+                placeholder={country.example}
+                value={phone}
+                onChange={(e) => set("phone", e.target.value)}
+                className={inputClass}
+              />
+            </Field>
+          </div>
+          {country.hint && <p className="text-sm text-neutral-600">{country.hint}</p>}
+          <Field label="Mensagem pronta (opcional)">
+            <textarea
+              rows={2}
+              maxLength={WHATSAPP_MESSAGE_MAX}
+              placeholder="Olá! Vim pelo QR code e gostaria de mais informações."
+              value={message}
+              onChange={(e) => set("message", e.target.value)}
+              className={inputClass}
+            />
+            <p className="mt-1 text-sm text-neutral-600">
+              Abre já escrita na conversa; a pessoa só toca em enviar. Quanto maior o texto, mais
+              denso fica o QR. {message.length}/{WHATSAPP_MESSAGE_MAX}
+            </p>
+          </Field>
+          {phone.trim() &&
+            (link ? (
+              <p className="break-all text-sm text-neutral-600">
+                Link gerado:{" "}
+                <a href={link} target="_blank" rel="noopener noreferrer" className="font-mono text-neutral-900 underline">
+                  {link}
+                </a>
+              </p>
+            ) : (
+              <p className="text-sm text-amber-700">
+                Número incompleto ou inválido — confira o {country.code === "BR" ? "DDD" : "código de área"} e
+                o número (ex.: {country.example}).
+              </p>
+            ))}
+        </div>
+      );
+    }
 
     case "APP":
       return (

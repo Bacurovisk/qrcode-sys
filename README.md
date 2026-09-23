@@ -37,7 +37,7 @@ comentários do `.env.example`) — sem isso o botão de login retorna erro do p
 
 ## Tipos de QR code
 
-Um `QrCode` tem um `kind` (URL, Texto, Contato, Rede social, Aplicativo, Localização, SMS,
+Um `QrCode` tem um `kind` (URL, Texto, Contato, Rede social, WhatsApp, Aplicativo, Localização, SMS,
 Email, Telefone, Wifi, Pix) e um `payload` Json com os campos específicos daquele tipo — toda a
 lógica de codificação fica centralizada em `src/lib/qrContent.ts`, usada tanto no preview do
 editor (client) quanto na rota `/r/[slug]` (server), então as duas nunca divergem.
@@ -45,6 +45,12 @@ editor (client) quanto na rota `/r/[slug]` (server), então as duas nunca diverg
 - **URL, Rede social, Telefone, Email, SMS, Localização** — sempre viram um redirect de verdade
   (`tel:`, `mailto:`, `sms:`, um link do Google Maps para localização). QR estático grava o
   conteúdo direto na imagem; dinâmico aponta pro `/r/[slug]`, que resolve e redireciona.
+- **WhatsApp** — país + número digitado livremente ("(11) 98765-4321"); `src/lib/whatsapp.ts`
+  normaliza (tira pontuação, o 0 de longa distância e o 55 se já vier junto — sem confundir com o
+  DDD 55 do RS) e monta `https://wa.me/<país><número>`, com a mensagem pronta opcional (até 200
+  caracteres) em `?text=`. Estático grava o link; dinâmico redireciona
+  pra ele. QRs antigos de "Rede social → WhatsApp" continuam válidos, mas essa opção não aparece
+  mais pra QRs novos. Também tem gerador público sem login em `/qr-code-whatsapp` (só estático).
 - **Aplicativo** — só existe como dinâmico: `/r/[slug]` detecta Android/iOS pelo `User-Agent` e
   manda pra loja certa; sem match (ou sem link daquele SO), cai no link de fallback ou numa
   página simples com os botões preenchidos.

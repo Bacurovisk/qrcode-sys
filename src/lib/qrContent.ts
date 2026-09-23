@@ -1,8 +1,11 @@
+import { buildWhatsappLink, formatWhatsappNumber } from "@/lib/whatsapp";
+
 export type QrKind =
   | "URL"
   | "TEXT"
   | "CONTACT"
   | "SOCIAL"
+  | "WHATSAPP"
   | "APP"
   | "LOCATION"
   | "SMS"
@@ -42,6 +45,11 @@ export type ContactPayload = {
   country?: string;
 };
 export type SocialPayload = { platform: SocialPlatform; url: string };
+/**
+ * `country` é ISO alfa-2 (EUA e Canadá dividem o +1); `phone` só com a parte
+ * nacional; `message` é o texto que já abre escrito na conversa.
+ */
+export type WhatsappPayload = { country: string; phone: string; message?: string };
 export type AppPayload = { androidUrl?: string; iosUrl?: string; fallbackUrl?: string };
 export type LocationPayload = { lat: number; lng: number; label?: string };
 export type SmsPayload = { phone: string; message?: string };
@@ -67,6 +75,7 @@ export type QrPayloadMap = {
   TEXT: TextPayload;
   CONTACT: ContactPayload;
   SOCIAL: SocialPayload;
+  WHATSAPP: WhatsappPayload;
   APP: AppPayload;
   LOCATION: LocationPayload;
   SMS: SmsPayload;
@@ -80,6 +89,7 @@ export const QR_KINDS: { value: QrKind; label: string }[] = [
   { value: "URL", label: "URL" },
   { value: "TEXT", label: "Texto simples" },
   { value: "CONTACT", label: "Contato" },
+  { value: "WHATSAPP", label: "WhatsApp" },
   { value: "SOCIAL", label: "Rede social" },
   { value: "APP", label: "Aplicativo" },
   { value: "LOCATION", label: "Localização" },
@@ -90,10 +100,14 @@ export const QR_KINDS: { value: QrKind; label: string }[] = [
   { value: "PIX", label: "Pix" },
 ];
 
-export const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string }[] = [
+/**
+ * `legacy`: WhatsApp virou um tipo próprio (WHATSAPP). Continua aqui só pra
+ * exibir/editar QRs antigos de "Rede social → WhatsApp"; não aparece pra novos.
+ */
+export const SOCIAL_PLATFORMS: { value: SocialPlatform; label: string; legacy?: boolean }[] = [
   { value: "instagram", label: "Instagram" },
   { value: "facebook", label: "Facebook" },
-  { value: "whatsapp", label: "WhatsApp" },
+  { value: "whatsapp", label: "WhatsApp", legacy: true },
   { value: "x", label: "X (Twitter)" },
   { value: "linkedin", label: "LinkedIn" },
   { value: "tiktok", label: "TikTok" },
@@ -272,6 +286,8 @@ export function summarizePayload<K extends QrKind>(kind: K, payload: QrPayloadMa
       const p = payload as ContactPayload;
       return [p.firstName, p.lastName].filter(Boolean).join(" ");
     }
+    case "WHATSAPP":
+      return formatWhatsappNumber(payload as WhatsappPayload);
     case "SOCIAL": {
       const p = payload as SocialPayload;
       const label = SOCIAL_PLATFORMS.find((s) => s.value === p.platform)?.label ?? p.platform;
@@ -313,6 +329,8 @@ export function getStaticContent<K extends QrKind>(kind: K, payload: QrPayloadMa
       return buildVCard(payload as ContactPayload);
     case "SOCIAL":
       return (payload as SocialPayload).url;
+    case "WHATSAPP":
+      return buildWhatsappLink(payload as WhatsappPayload) ?? "";
     case "APP": {
       const p = payload as AppPayload;
       return p.androidUrl || p.iosUrl || p.fallbackUrl || "";

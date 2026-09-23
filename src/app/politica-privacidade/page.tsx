@@ -38,12 +38,16 @@ export default function PrivacyPolicyPage() {
         não são registrados.
       </LegalP>
       <LegalP>
-        <strong>Gerador de QR code Pix sem cadastro:</strong> a página{" "}
+        <strong>Geradores sem cadastro (Pix e WhatsApp):</strong> as páginas{" "}
         <a href="/qr-code-pix" className="underline">
           /qr-code-pix
         </a>{" "}
-        monta o QR code inteiramente no seu navegador. A chave Pix, o nome e os demais dados
-        digitados ali não são enviados nem armazenados pelo qrcode-sys.
+        e{" "}
+        <a href="/qr-code-whatsapp" className="underline">
+          /qr-code-whatsapp
+        </a>{" "}
+        montam o QR code inteiramente no seu navegador. A chave Pix, o número de WhatsApp e os
+        demais dados digitados ali não são enviados nem armazenados pelo qrcode-sys.
       </LegalP>
 
       <LegalH2>2. Como usamos os dados</LegalH2>
