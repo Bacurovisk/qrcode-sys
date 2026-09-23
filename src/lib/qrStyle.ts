@@ -1,13 +1,9 @@
 import type { CornerDotType, CornerSquareType, DotType, Options } from "qr-code-styling";
+import { FRAME_TEXT_MAX, FRAME_TYPE_VALUES } from "@/lib/qrStyleSchema";
 
-export type FrameType =
-  | "none"
-  | "circle"
-  | "text-bottom"
-  | "box-bottom"
-  | "box-top"
-  | "button-bottom"
-  | "bubble-top";
+export { FRAME_TEXT_MAX };
+
+export type FrameType = (typeof FRAME_TYPE_VALUES)[number];
 
 export type QrFrame = { type: FrameType; text?: string; color?: string };
 
@@ -23,7 +19,6 @@ export type QrStyle = {
 export const DEFAULT_DOT_COLOR = "#111827";
 export const DEFAULT_BG_COLOR = "#ffffff";
 export const DEFAULT_FRAME_TEXT = "Escaneie";
-export const FRAME_TEXT_MAX = 20;
 
 /** Largura de referência: todas as medidas das molduras são escaladas a partir dela. */
 const BASE_SIZE = 260;

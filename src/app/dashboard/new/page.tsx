@@ -6,6 +6,7 @@ import { QrEditor, type QrStyle } from "@/components/QrEditor";
 import { QrPayloadFields, defaultPayloadFor } from "@/components/qr-forms/QrPayloadFields";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
 import { QR_KINDS, DYNAMIC_ONLY_KINDS, getStaticContent, type QrKind } from "@/lib/qrContent";
+import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
 
 function coerceForPreview(kind: QrKind, payload: Record<string, unknown>): Record<string, unknown> {
   if (kind === "LOCATION") {
@@ -51,6 +52,23 @@ export default function NewQrCodePage() {
   const effectiveType = isDynamicOnly ? "DYNAMIC" : type;
 
   const previewData = useMemo(() => previewContent(kind, payload), [kind, payload]);
+  // Mesma validação que o servidor aplica ao criar.
+  const payloadValid = useMemo(
+    () => qrPayloadSchema.safeParse({ kind, payload }).success,
+    [kind, payload]
+  );
+
+  let downloadBlockedReason: string | null = null;
+  if (!name.trim()) {
+    downloadBlockedReason = "Preencha o nome do QR code para liberar o download.";
+  } else if (!payloadValid) {
+    downloadBlockedReason = "Preencha o conteúdo do QR code corretamente para liberar o download.";
+  } else if (effectiveType === "DYNAMIC") {
+    // O preview mostra o conteúdo final, mas o QR dinâmico de verdade aponta
+    // pro link /r/<slug>, que só existe depois de criar.
+    downloadBlockedReason =
+      "QR dinâmico: o download fica disponível depois de criar, porque ele aponta para o link de redirecionamento gerado na criação.";
+  }
 
   function handleKindChange(next: QrKind) {
     setKind(next);
@@ -146,7 +164,13 @@ export default function NewQrCodePage() {
         <div>
           <h2 className="text-sm font-medium text-neutral-700">Aparência</h2>
           <div className="mt-2 rounded-lg border border-neutral-200 bg-white p-4">
-            <QrEditor data={previewData} value={style} onChange={setStyle} />
+            <QrEditor
+              data={previewData}
+              value={style}
+              onChange={setStyle}
+              fileName={name}
+              downloadBlockedReason={downloadBlockedReason}
+            />
           </div>
         </div>
 

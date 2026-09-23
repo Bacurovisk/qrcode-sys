@@ -5,10 +5,12 @@ import type { Prisma } from "@/generated/prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
+import { qrStyleSchema } from "@/lib/qrStyleSchema";
+import { MAX_QR_BODY_BYTES, readJsonBody } from "@/lib/requestBody";
 
 const updateSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
-  style: z.record(z.string(), z.unknown()).optional(),
+  style: qrStyleSchema.optional(),
 });
 
 async function getOwnedQrCode(id: string, userId: string) {
@@ -57,7 +59,13 @@ export async function PATCH(
     return NextResponse.json({ error: "Não encontrado" }, { status: 404 });
   }
 
-  const body = await request.json().catch(() => null);
+  const body = await readJsonBody(request, MAX_QR_BODY_BYTES);
+  if (body === undefined) {
+    return NextResponse.json(
+      { error: "Dados grandes demais — use um logo menor (máx. 500 KB)" },
+      { status: 413 }
+    );
+  }
   const base = updateSchema.safeParse(body);
   if (!base.success) {
     return NextResponse.json(

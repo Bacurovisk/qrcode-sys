@@ -6,6 +6,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generateSlug } from "@/lib/slug";
 import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
+import { qrStyleSchema } from "@/lib/qrStyleSchema";
+import { MAX_QR_BODY_BYTES, readJsonBody } from "@/lib/requestBody";
 import { DYNAMIC_ONLY_KINDS } from "@/lib/qrContent";
 import { checkRateLimit } from "@/lib/rateLimit";
 import {
@@ -22,7 +24,7 @@ const CREATE_WINDOW_MS = 60_000;
 const baseSchema = z.object({
   name: z.string().trim().min(1).max(120),
   type: z.enum(["STATIC", "DYNAMIC"]),
-  style: z.record(z.string(), z.unknown()).optional().default({}),
+  style: qrStyleSchema.optional().default({}),
 });
 
 export async function GET() {
@@ -69,7 +71,13 @@ export async function POST(request: Request) {
     setBypassCookie = true;
   }
 
-  const body = await request.json().catch(() => null);
+  const body = await readJsonBody(request, MAX_QR_BODY_BYTES);
+  if (body === undefined) {
+    return NextResponse.json(
+      { error: "Dados grandes demais — use um logo menor (máx. 500 KB)" },
+      { status: 413 }
+    );
+  }
 
   const base = baseSchema.safeParse(body);
   if (!base.success) {

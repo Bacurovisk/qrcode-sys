@@ -33,6 +33,17 @@ const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 const THUMB_BASE: QrStyle = { dotsOptions: { color: "#374151" } };
 const FRAME_THUMB_BASE: QrStyle = { dotsOptions: { color: "#9ca3af" } };
 
+/** Nome do QR → nome de arquivo válido em qualquer SO. */
+function safeFileName(name: string): string {
+  const cleaned = name
+    .replace(/[\\/:*?"<>|]/g, "")
+    .replace(/\p{Cc}/gu, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 100);
+  return cleaned || "qrcode";
+}
+
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section>
@@ -114,12 +125,16 @@ export function QrEditor({
   data,
   value,
   onChange,
-  fileNamePrefix = "qrcode",
+  fileName = "qrcode",
+  downloadBlockedReason = null,
 }: {
   data: string;
   value: QrStyle;
   onChange: (style: QrStyle) => void;
-  fileNamePrefix?: string;
+  /** Nome do arquivo baixado, sem extensão (normalmente o nome do QR). */
+  fileName?: string;
+  /** Enquanto houver motivo, os botões de download ficam desabilitados e o motivo aparece. */
+  downloadBlockedReason?: string | null;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const qrRef = useRef<QRCodeStyling | null>(null);
@@ -142,10 +157,11 @@ export function QrEditor({
   }, [data, value]);
 
   function download(extension: "png" | "svg") {
+    if (downloadBlockedReason) return;
     // Instância separada em alta resolução, pra o PNG não sair com 260px.
     const qr = new QRCodeStyling(buildQrOptions(data, value, DOWNLOAD_SIZE));
     qr.applyExtension(frameExtension(() => value));
-    qr.download({ extension, name: fileNamePrefix });
+    qr.download({ extension, name: safeFileName(fileName) });
   }
 
   function handleLogoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -185,27 +201,31 @@ export function QrEditor({
 
   return (
     <div className="flex flex-col gap-6 md:flex-row md:items-start">
-      <div className="flex flex-col items-center gap-3 md:sticky md:top-4">
+      {/* No mobile vem depois das opções: primeiro edita, por último baixa. */}
+      <div className="order-last flex flex-col items-center gap-3 md:sticky md:top-4 md:order-first">
         <div
           ref={containerRef}
           className="rounded-lg border border-neutral-200 bg-white p-3 [&>canvas]:h-auto [&>canvas]:max-w-full"
         />
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => download("png")}
-            className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100"
-          >
-            Baixar PNG
-          </button>
-          <button
-            type="button"
-            onClick={() => download("svg")}
-            className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100"
-          >
-            Baixar SVG
-          </button>
+          {(["png", "svg"] as const).map((ext) => (
+            <button
+              key={ext}
+              type="button"
+              onClick={() => download(ext)}
+              disabled={Boolean(downloadBlockedReason)}
+              aria-describedby={downloadBlockedReason ? "qr-download-blocked" : undefined}
+              className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent"
+            >
+              Baixar {ext.toUpperCase()}
+            </button>
+          ))}
         </div>
+        {downloadBlockedReason && (
+          <p id="qr-download-blocked" className="max-w-[260px] text-center text-xs text-neutral-600">
+            {downloadBlockedReason}
+          </p>
+        )}
       </div>
 
       <div className="min-w-0 flex-1 space-y-6">

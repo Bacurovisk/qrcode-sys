@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
 import { QrPayloadFields } from "@/components/qr-forms/QrPayloadFields";
 import { getStaticContent, QR_KINDS, type QrKind } from "@/lib/qrContent";
+import { qrPayloadSchema } from "@/lib/qrPayloadSchema";
 
 type ScanEvent = {
   id: string;
@@ -54,6 +55,18 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
     }
   }, [qrCode.type, qrCode.slug, qrCode.kind, payload]);
 
+  const payloadValid = useMemo(
+    () => qrPayloadSchema.safeParse({ kind: qrCode.kind, payload }).success,
+    [qrCode.kind, payload]
+  );
+
+  let downloadBlockedReason: string | null = null;
+  if (!name.trim()) {
+    downloadBlockedReason = "Preencha o nome do QR code para liberar o download.";
+  } else if (qrCode.type === "DYNAMIC" ? !payloadValid : !encodedData) {
+    downloadBlockedReason = "Preencha o conteúdo do QR code corretamente para liberar o download.";
+  }
+
   async function handleSave() {
     setError(null);
     setSaved(false);
@@ -96,7 +109,9 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
   }
 
   return (
-    <div className="space-y-8">
+    // No mobile: dados → aparência (download por último) → salvar.
+    // No desktop a aparência continua no topo, como antes.
+    <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="truncate text-2xl font-semibold text-neutral-900">{qrCode.name}</h1>
@@ -112,11 +127,17 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
         </button>
       </div>
 
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
-        <QrEditor data={encodedData} value={style} onChange={setStyle} fileNamePrefix={qrCode.name} />
+      <div className="order-2 rounded-lg border border-neutral-200 bg-white p-4 md:order-1">
+        <QrEditor
+          data={encodedData}
+          value={style}
+          onChange={setStyle}
+          fileName={name}
+          downloadBlockedReason={downloadBlockedReason}
+        />
       </div>
 
-      <div className="space-y-4 rounded-lg border border-neutral-200 bg-white p-4">
+      <div className="order-1 space-y-4 rounded-lg border border-neutral-200 bg-white p-4 md:order-2">
         <h2 className="font-medium text-neutral-900">Editar</h2>
         <div>
           <label className="block text-sm font-medium text-neutral-700">Nome</label>
@@ -135,6 +156,10 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
             novo QR code se precisar de outro conteúdo.
           </p>
         )}
+      </div>
+
+      {/* Fora do card de dados pra, no mobile, ficar depois da aparência (salva as duas coisas). */}
+      <div className="order-3 space-y-2">
         {error && <p className="text-sm text-red-600">{error}</p>}
         {saved && <p className="text-sm text-green-600">Salvo.</p>}
         <button
@@ -148,7 +173,7 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
       </div>
 
       {qrCode.type === "DYNAMIC" && (
-        <div className="rounded-lg border border-neutral-200 bg-white p-4">
+        <div className="order-4 rounded-lg border border-neutral-200 bg-white p-4">
           <h2 className="font-medium text-neutral-900">Estatísticas</h2>
           <p className="mt-1 text-3xl font-semibold text-neutral-900">{qrCode.totalScans}</p>
           <p className="text-sm text-neutral-600">scans no total</p>
