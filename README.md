@@ -90,8 +90,18 @@ a nova versão do `app`.
 
 ## Doação
 
-O botão de doação usa um link do PayPal configurável via `NEXT_PUBLIC_PAYPAL_DONATE_URL`
-(PayPal.me ou botão hospedado do PayPal Donate) — sem SDK, sem backend.
+O botão de doação leva para a página pública `/doar` (`src/app/doar/page.tsx`), que oferece
+duas opções — sem SDK, sem backend de pagamento:
+
+- **Pix**: QR code + "copia e cola" gerados com `buildPix()` (`src/lib/qrContent.ts`). O padrão
+  é **valor livre** (sem o campo 54 do BR Code, quem paga digita o valor no app do banco), com
+  atalhos opcionais de R$ 5, 10 e 25. Configurado via `PIX_KEY_TYPE`, `PIX_KEY`, `PIX_NAME`,
+  `PIX_CITY` e `PIX_DESCRIPTION` (opcional) — envs só do servidor, lidas em runtime (a página
+  usa `connection()`), então trocar a chave não exige rebuild da imagem. Sem
+  `PIX_KEY`/`PIX_NAME`/`PIX_CITY`, o cartão do Pix não aparece. Use uma **chave aleatória
+  (EVP)**: a chave fica legível pra qualquer um que ler o QR.
+- **PayPal**: link configurável via `NEXT_PUBLIC_PAYPAL_DONATE_URL` (PayPal.me ou botão
+  hospedado do PayPal Donate).
 
 ## Login (OAuth — Google e Microsoft)
 

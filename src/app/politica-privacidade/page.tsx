@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalPageLayout title="Política de Privacidade" lastUpdated="4 de setembro de 2026">
+    <LegalPageLayout title="Política de Privacidade" lastUpdated="23 de setembro de 2026">
       <LegalP>
         O qrcode-sys é um serviço gratuito para criar e gerenciar QR codes estáticos e dinâmicos.
         Esta página explica quais dados coletamos, para que usamos e quais direitos você tem
@@ -57,8 +57,13 @@ export default function PrivacyPolicyPage() {
           recebem seus QR codes nem dados de scan.
         </li>
         <li>
-          <strong>PayPal</strong> — só se você clicar no botão de doação, que te leva pro site do
-          PayPal; o qrcode-sys não envia nenhum dado seu ao PayPal nesse processo.
+          <strong>PayPal</strong> — só se você escolher doar via PayPal na página de doação, que
+          te leva pro site do PayPal; o qrcode-sys não envia nenhum dado seu ao PayPal nesse
+          processo.
+        </li>
+        <li>
+          <strong>Pix</strong> — a doação via Pix acontece inteiramente no app do seu banco; o
+          qrcode-sys só exibe o QR code e não recebe nenhum dado da transação nem de quem doou.
         </li>
       </LegalUl>
       <LegalP>

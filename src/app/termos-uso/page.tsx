@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function TermsOfUsePage() {
   return (
-    <LegalPageLayout title="Termos de Uso" lastUpdated="4 de setembro de 2026">
+    <LegalPageLayout title="Termos de Uso" lastUpdated="23 de setembro de 2026">
       <LegalP>
         Estes termos regem o uso do qrcode-sys. Ao criar uma conta ou usar o serviço, você
         concorda com eles.
@@ -18,7 +18,7 @@ export default function TermsOfUsePage() {
         O qrcode-sys permite criar QR codes estáticos e dinâmicos com personalização visual
         gratuita, e acompanhar estatísticas de scan para os dinâmicos. O serviço é gratuito e
         mantido por uma pessoa física como projeto pessoal — aceita doações voluntárias via
-        PayPal, que não desbloqueiam nenhuma funcionalidade extra.
+        Pix ou PayPal, que não desbloqueiam nenhuma funcionalidade extra.
       </LegalP>
 
       <LegalH2>2. Conta e login</LegalH2>
