@@ -82,7 +82,15 @@ no `app` e no `db` no `docker-compose.yml` — sem isso o compose gera nomes com
    docker compose run --rm migrate
    ```
 5. No reverse proxy, aponte pro **nome do container** do app (não `localhost`) na porta `3000`,
-   com SSL via Let's Encrypt.
+   com SSL via Let's Encrypt, e limite o tamanho do corpo das requisições a 2 MB. No Nginx Proxy
+   Manager: Proxy Hosts → Edit → aba **Advanced** → "Custom Nginx Configuration":
+   ```nginx
+   client_max_body_size 2m;
+   ```
+   (Traefik/Caddy têm equivalente.) O app recusa sozinho corpos acima de 1 MB
+   (`src/lib/requestBody.ts`), mas quando o pedido chega sem `Content-Length` ele precisa ler o
+   corpo inteiro antes de medir — o limite no proxy barra isso antes de chegar ao app. Essa
+   configuração fica só no proxy, não neste repositório: refaça-a se o proxy host for recriado.
 6. Inclua um `pg_dump` lógico do Postgres deste projeto no seu pipeline de backup.
 
 Sempre que o `prisma/schema.prisma` mudar, rode `docker compose run --rm migrate` antes de subir
