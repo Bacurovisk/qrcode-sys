@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -10,8 +11,14 @@ function kindLabel(kind: QrKind): string {
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
+  // Confere aqui mesmo, sem contar com o redirect do layout: layout e página
+  // renderizam em paralelo. E nunca `session?.user?.id` direto no where — com
+  // undefined o Prisma ignora o filtro e devolveria QR codes de todo mundo.
+  const userId = session?.user?.id;
+  if (!userId) redirect("/login");
+
   const qrCodes = await prisma.qrCode.findMany({
-    where: { userId: session!.user.id },
+    where: { userId },
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { scanEvents: true } } },
   });
