@@ -136,6 +136,17 @@ duas opções — sem SDK, sem backend de pagamento:
   DNS do Cloudflare), enviar `https://qrcode.neojr.com/sitemap.xml` e conferir se o `robots.txt`
   gerenciado do Cloudflare manteve as regras e a linha `Sitemap:` do app.
 
+## Créditos
+
+- Bandeiras de país no seletor do QR de WhatsApp: fonte "Twemoji Country Flags" do
+  [country-flag-emoji-polyfill](https://github.com/talkjs/country-flag-emoji-polyfill) (código
+  MIT), com arte do [Twemoji](https://github.com/twitter/twemoji) (CC-BY 4.0). Servida de
+  `public/fonts/` (licença ao lado do arquivo) e declarada em `src/app/globals.css`; só é
+  baixada em páginas que exibem bandeiras. Existe porque Chrome/Edge no Windows não desenham
+  bandeiras e mostram só as letras do país.
+- Ícones de marca dos logos prontos (WhatsApp, Instagram, Pix, PayPal):
+  [simple-icons](https://simpleicons.org) (CC0).
+
 ## Login (OAuth — Google e Microsoft)
 
 Não existe cadastro/senha própria: login é só `signIn("google")` / `signIn("microsoft-entra-id")`

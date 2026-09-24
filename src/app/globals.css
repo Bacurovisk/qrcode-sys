@@ -16,6 +16,23 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * Bandeiras de país (🇧🇷) no Windows: Chrome/Edge lá não têm desenho de
+ * bandeira e mostram só as letras ("BR"). Esta fonte contém apenas as
+ * bandeiras e, pelo unicode-range, só é baixada quando alguma aparece na
+ * página (ex.: seletor de país do QR de WhatsApp) — o resto do texto segue
+ * na fonte seguinte da lista. Servida localmente por causa da CSP.
+ * Fonte: country-flag-emoji-polyfill 0.1.10 (MIT), arte Twemoji (CC-BY 4.0)
+ * — licença em public/fonts/TwemojiCountryFlags-LICENSE.md.
+ */
+@font-face {
+  font-family: "Twemoji Country Flags";
+  unicode-range: U+1F1E6-1F1FF, U+1F3F4, U+E0062-E0063, U+E0065, U+E0067, U+E006C, U+E006E,
+    U+E0073-E0074, U+E0077, U+E007F;
+  src: url("/fonts/TwemojiCountryFlags.woff2") format("woff2");
+  font-display: swap;
+}
+
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: "Twemoji Country Flags", Arial, Helvetica, sans-serif;
 }
