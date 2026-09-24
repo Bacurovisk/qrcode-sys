@@ -113,8 +113,8 @@ export default function PrivacyPolicyPage() {
       <LegalH2>9. Contato</LegalH2>
       <LegalP>
         Dúvidas sobre privacidade ou pedidos relacionados aos seus dados:{" "}
-        <a href="mailto:contato@rbacuri.dpdns.org" className="underline">
-          contato@rbacuri.dpdns.org
+        <a href="mailto:contato@neojr.com" className="underline">
+          contato@neojr.com
         </a>
         .
       </LegalP>

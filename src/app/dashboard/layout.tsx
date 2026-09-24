@@ -9,7 +9,7 @@ import { DonateButton } from "@/components/DonateButton";
 
 // Área logada: fora do índice (o robots.txt também bloqueia /dashboard).
 export const metadata: Metadata = {
-  title: "Meus QR codes",
+  title: "Seus QR codes",
   robots: { index: false, follow: false },
 };
 

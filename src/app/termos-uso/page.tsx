@@ -121,8 +121,8 @@ export default function TermsOfUsePage() {
       <LegalH2>11. Contato</LegalH2>
       <LegalP>
         Dúvidas sobre estes termos:{" "}
-        <a href="mailto:contato@rbacuri.dpdns.org" className="underline">
-          contato@rbacuri.dpdns.org
+        <a href="mailto:contato@neojr.com" className="underline">
+          contato@neojr.com
         </a>
         .
       </LegalP>

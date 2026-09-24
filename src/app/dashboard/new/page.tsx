@@ -2,6 +2,7 @@
 
 import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
 import { QrPayloadFields, defaultPayloadFor } from "@/components/qr-forms/QrPayloadFields";
 import { TurnstileWidget } from "@/components/TurnstileWidget";
@@ -114,6 +115,7 @@ export default function NewQrCodePage() {
 
   return (
     <div>
+      <Breadcrumbs items={[{ label: "Seus QR codes", href: "/dashboard" }, { label: "Novo QR code" }]} />
       <h1 className="text-2xl font-semibold text-neutral-900">Novo QR code</h1>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-6">

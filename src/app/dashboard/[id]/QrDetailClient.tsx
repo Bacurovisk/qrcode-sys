@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { QrEditor, type QrStyle } from "@/components/QrEditor";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { LocalDateTime } from "@/components/LocalDateTime";
 import { QrPayloadFields } from "@/components/qr-forms/QrPayloadFields";
 import { getStaticContent, QR_KINDS, STATIC_ONLY_KINDS, type QrKind } from "@/lib/qrContent";
@@ -114,19 +115,22 @@ export function QrDetailClient({ qrCode }: { qrCode: QrCodeDetail }) {
     // No mobile: dados → aparência (download por último) → salvar.
     // No desktop a aparência continua no topo, como antes.
     <div className="flex flex-col gap-8">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <h1 className="truncate text-2xl font-semibold text-neutral-900">{qrCode.name}</h1>
-          <p className="text-sm text-neutral-600">{kindLabel(qrCode.kind)}</p>
+      <div>
+        <Breadcrumbs items={[{ label: "Seus QR codes", href: "/dashboard" }, { label: qrCode.name }]} />
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="truncate text-2xl font-semibold text-neutral-900">{qrCode.name}</h1>
+            <p className="text-sm text-neutral-600">{kindLabel(qrCode.kind)}</p>
+          </div>
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            {deleting ? "Excluindo..." : "Excluir"}
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={handleDelete}
-          disabled={deleting}
-          className="shrink-0 rounded-md px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"
-        >
-          {deleting ? "Excluindo..." : "Excluir"}
-        </button>
       </div>
 
       {/* QRs criados antes de Pix/Wifi virarem só-estáticos: o link /r/ continua
