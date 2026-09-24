@@ -90,7 +90,35 @@ export default function TermsOfUsePage() {
       <LegalH2>9. Lei aplicável</LegalH2>
       <LegalP>Estes termos são regidos pela legislação brasileira.</LegalP>
 
-      <LegalH2>10. Contato</LegalH2>
+      <LegalH2>10. Créditos</LegalH2>
+      <LegalP>O qrcode-sys usa trabalhos de terceiros, com os devidos créditos:</LegalP>
+      <LegalUl>
+        <li>
+          Bandeiras de país: arte do{" "}
+          <a href="https://github.com/twitter/twemoji" className="underline" target="_blank" rel="noopener noreferrer">
+            Twemoji
+          </a>
+          , licenciada sob{" "}
+          <a href="https://creativecommons.org/licenses/by/4.0/deed.pt-br" className="underline" target="_blank" rel="noopener noreferrer">
+            CC BY 4.0
+          </a>
+          , distribuída pela fonte do{" "}
+          <a href="https://github.com/talkjs/country-flag-emoji-polyfill" className="underline" target="_blank" rel="noopener noreferrer">
+            country-flag-emoji-polyfill
+          </a>{" "}
+          (licença MIT).
+        </li>
+        <li>
+          Ícones de WhatsApp, Instagram, Pix e PayPal:{" "}
+          <a href="https://simpleicons.org" className="underline" target="_blank" rel="noopener noreferrer">
+            Simple Icons
+          </a>{" "}
+          (CC0). As marcas pertencem aos seus respectivos donos e são usadas apenas para
+          identificar o serviço correspondente.
+        </li>
+      </LegalUl>
+
+      <LegalH2>11. Contato</LegalH2>
       <LegalP>
         Dúvidas sobre estes termos:{" "}
         <a href="mailto:contato@rbacuri.dpdns.org" className="underline">

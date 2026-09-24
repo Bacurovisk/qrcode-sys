@@ -10,7 +10,7 @@ export const metadata = pageMetadata({
 
 export default function PrivacyPolicyPage() {
   return (
-    <LegalPageLayout title="Política de Privacidade" lastUpdated="24 de setembro de 2026">
+    <LegalPageLayout title="Política de Privacidade" lastUpdated="23 de setembro de 2026">
       <LegalP>
         O qrcode-sys é um serviço gratuito para criar e gerenciar QR codes estáticos e dinâmicos.
         Esta página explica quais dados coletamos, para que usamos e quais direitos você tem
